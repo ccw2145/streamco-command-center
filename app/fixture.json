@@ -1,0 +1,3627 @@
+{
+ "illustrative": false,
+ "interim": false,
+ "source": "cindy_wu_catalog.streamco (real tables)",
+ "generated_at": "2026-11-13T22:55:36+00:00",
+ "screens": {
+  "truth": {
+   "story": "A record night: 9.6M people streaming at the peak. The next morning, Sports cancellations came in 76% above normal. Before anyone decides what to do, every team needs the same number.",
+   "badges": [
+    {
+     "id": "pii_masked",
+     "label": "PII masked",
+     "detail": "Email, phone and card details are masked by governed views in Unity Catalog."
+    },
+    {
+     "id": "kids_filtered",
+     "label": "Kids profiles filtered",
+     "detail": "Kids-only accounts are removed by the governed views before any query or model sees them."
+    }
+   ],
+   "sources": [
+    {
+     "source_id": "subscriptions",
+     "name": "Subscriptions & accounts",
+     "system_type": "MySQL",
+     "prod_connector": "Lakeflow Connect (CDC)",
+     "bronze_tables": [
+      "bronze_mysql_subscriptions",
+      "bronze_mysql_accounts"
+     ],
+     "row_count": 5047247
+    },
+    {
+     "source_id": "billing",
+     "name": "Billing & payment retries",
+     "system_type": "PostgreSQL",
+     "prod_connector": "Lakeflow Connect (CDC)",
+     "bronze_tables": [
+      "bronze_pg_billing_attempts"
+     ],
+     "row_count": 502264
+    },
+    {
+     "source_id": "support",
+     "name": "Support cases & transcripts",
+     "system_type": "Salesforce Service Cloud",
+     "prod_connector": "Lakeflow Connect (SaaS connector)",
+     "bronze_tables": [
+      "bronze_sfdc_support_cases"
+     ],
+     "row_count": 37036
+    },
+    {
+     "source_id": "payments",
+     "name": "Payment processor events",
+     "system_type": "Payment processor API",
+     "prod_connector": "Webhook to Zerobus Ingest",
+     "bronze_tables": [
+      "bronze_processor_events"
+     ],
+     "row_count": 482831
+    },
+    {
+     "source_id": "telemetry",
+     "name": "Playback & CDN telemetry",
+     "system_type": "Event stream",
+     "prod_connector": "Zerobus Ingest / Kafka",
+     "bronze_tables": [
+      "bronze_session_events",
+      "bronze_cdn_telemetry"
+     ],
+     "row_count": 4350064
+    }
+   ],
+   "pipeline": {
+    "layers": [
+     {
+      "id": "bronze",
+      "label": "Bronze",
+      "summary": "Raw, as landed"
+     },
+     {
+      "id": "silver",
+      "label": "Silver",
+      "summary": "Cleaned, joined, quality-checked"
+     },
+     {
+      "id": "gold",
+      "label": "Gold",
+      "summary": "Business tables"
+     }
+    ],
+    "metric_view": {
+     "name": "mv_streamco_metrics",
+     "measures": [
+      "cancels",
+      "cancel_rate",
+      "active_subs",
+      "buffering_ratio"
+     ]
+    }
+   },
+   "team_counts": {
+    "tier": "Sports",
+    "teams": [
+     {
+      "team": "Product analytics",
+      "short": "Product",
+      "count": 17108,
+      "definition": "cancel button clicks in the app, including people who were saved or changed their mind",
+      "metric_id": "team_cancels_product",
+      "delta": 1308,
+      "bridge": "Counts cancel clicks: 4,478 stayed or came back within 24 hours, and 3,170 left without a click, 3,144 of them on a failed payment."
+     },
+     {
+      "team": "Finance",
+      "short": "Finance",
+      "count": 15760,
+      "definition": "billing ledger, counted when the final charge is reversed",
+      "metric_id": "team_cancels_finance",
+      "delta": -40,
+      "bridge": "Counts the billing ledger: 40 cancels hadn't posted to it yet."
+     },
+     {
+      "team": "Customer care",
+      "short": "Care",
+      "count": 12851,
+      "definition": "cancellations that came through a support contact",
+      "metric_id": "team_cancels_care",
+      "delta": -2949,
+      "bridge": "Counts only cancels with a support contact: 2,949 cancelled without contacting Care."
+     }
+    ],
+    "governed": {
+     "count": 15800,
+     "definition": "Effective cancellations: subscription ended, net of reversals within 24 hours, reconciled to the billing ledger.",
+     "metric_id": "cancels_governed"
+    },
+    "reconciliation": {
+     "ledger": 15760,
+     "pct_diff": 0.002531645569620253,
+     "status": "within_tolerance",
+     "label": "Reconciled to the billing ledger within 0.25%"
+    }
+   },
+   "tiles": [
+    {
+     "id": "peak_viewers",
+     "label": "Peak viewers",
+     "display": "9.6M",
+     "compare_label": "Forecast",
+     "compare_display": "9.6M",
+     "status": "ok",
+     "metric_id": "peak_viewers",
+     "next": {
+      "to": "/forecast",
+      "label": "See the forecast"
+     }
+    },
+    {
+     "id": "cancels_vs_expected",
+     "label": "Cancellations vs expected",
+     "display": "+76%",
+     "compare_label": "Actual vs expected",
+     "compare_display": "15.8k vs 8,977",
+     "status": "alert",
+     "metric_id": "cancels_pct_over",
+     "next": {
+      "to": "/ask",
+      "label": "Ask why"
+     }
+    },
+    {
+     "id": "subs_at_risk",
+     "label": "Subscribers at risk",
+     "display": "30k",
+     "compare_label": "Likely to cancel in 30 days",
+     "compare_display": "~6,700",
+     "status": "alert",
+     "metric_id": "subs_at_risk",
+     "next": {
+      "to": "/save",
+      "label": "See the plan"
+     }
+    },
+    {
+     "id": "subs_saved",
+     "label": "Subscribers the plan saves",
+     "display": "~2,100",
+     "compare_label": "Range",
+     "compare_display": "1,300-2,900",
+     "status": "ok",
+     "metric_id": "plan_saved_total"
+    }
+   ],
+   "core_entity": {
+    "name": "subscriber",
+    "key": "subscriber_id",
+    "count": 3859513,
+    "systems": 5,
+    "unmatched_ids": 0,
+    "metric_id": "subscriber_entity",
+    "label": "one subscriber_id joins all 5 systems \u00b7 3.9M subscribers \u00b7 every ID matched"
+   },
+   "data_quality": {
+    "n_rules": 6,
+    "rows_checked": 7187748,
+    "pct_passed": 0.9973440916403858,
+    "quarantined": 0,
+    "warned": 19090,
+    "failing": [
+     {
+      "rule": "app_version_present",
+      "dataset": "cdn_rows_checked",
+      "action": "ALLOW",
+      "failed": 19090,
+      "checked": 1916052
+     }
+    ],
+    "pipelines": [
+     "streamco-data-batch",
+     "streamco-data-stream"
+    ],
+    "run_ts": "2026-11-09T04:28:29.229Z",
+    "metric_id": "data_quality",
+    "status": "warn",
+    "label": "6 quality rules \u00b7 99.7% of rows passed \u00b7 0 quarantined \u00b7 19,090 flagged",
+    "detail": "app_version_present (warning, rows kept): 19,090 of 1,916,052 cdn_rows_checked rows"
+   },
+   "how_it_works": {
+    "panels": [
+     {
+      "title": "Five systems, one copy of the truth",
+      "body": "Subscriptions, billing, support, the payment processor and playback telemetry land in bronze tables, are cleaned in silver and modelled in gold, all in Unity Catalog. In production they connect through Lakeflow Connect or Zerobus Ingest.",
+      "products": [
+       "Lakeflow Connect",
+       "Zerobus Ingest",
+       "Lakeflow Declarative Pipelines",
+       "Unity Catalog"
+      ]
+     },
+     {
+      "title": "One governed definition",
+      "body": "Product, Finance and Care each counted cancellations their own way. The metric view defines 'cancels' once, and every screen, the Genie Agent and the Ask agent read that definition.",
+      "products": [
+       "Metric Views",
+       "Unity Catalog"
+      ]
+     },
+     {
+      "title": "Quality checked on the way in",
+      "body": "Each pipeline carries data quality rules (Lakeflow expectations). Rows that break a hard rule are dropped; rows that break a warning rule are kept and counted. The counts come from the pipelines' event log, and the governed number is reconciled to the billing ledger.",
+      "products": [
+       "Lakeflow expectations",
+       "Pipeline event log"
+      ]
+     },
+     {
+      "title": "Lineage you can click",
+      "body": "Unity Catalog records which tables each table reads, so the governed number traces back from the metric view through gold, silver and bronze to the five sources.",
+      "products": [
+       "Unity Catalog lineage",
+       "Catalog Explorer"
+      ]
+     },
+     {
+      "title": "Governed where the data lives",
+      "body": "Every screen, Genie and the agent read governed views that mask email, phone and address and drop kids-only accounts, so no query, model or prompt can skip them. Only members of the cc_privileged group see unmasked values.",
+      "products": [
+       "Unity Catalog",
+       "Dynamic views",
+       "Account groups"
+      ]
+     }
+    ],
+    "facts": [
+     [
+      "Core entity",
+      "subscriber_id, the key every source system shares"
+     ],
+     [
+      "Unmasked email, phone, address",
+      "members of the cc_privileged account group only (group pending creation)"
+     ],
+     [
+      "Kids-only accounts",
+      "filtered for everyone, before any query, model or prompt"
+     ]
+    ]
+   }
+  },
+  "forecast": {
+   "clock": {
+    "t0": "2027-02-14T18:00:00-05:00",
+    "kickoff": "2027-02-14T18:30:00-05:00",
+    "halftime_start": "2027-02-14T20:15:00-05:00",
+    "halftime_end": "2027-02-14T20:35:00-05:00",
+    "end": "2027-02-14T22:30:00-05:00"
+   },
+   "series": [
+    {
+     "t": "2027-02-14T18:00:00-05:00",
+     "actual": 2475299,
+     "yhat": 2370251,
+     "lo": 2326366,
+     "hi": 2426195
+    },
+    {
+     "t": "2027-02-14T18:05:00-05:00",
+     "actual": 2756925,
+     "yhat": 2636367,
+     "lo": 2582014,
+     "hi": 2703190
+    },
+    {
+     "t": "2027-02-14T18:10:00-05:00",
+     "actual": 3015229,
+     "yhat": 2914069,
+     "lo": 2849039,
+     "hi": 2978038
+    },
+    {
+     "t": "2027-02-14T18:15:00-05:00",
+     "actual": 3285739,
+     "yhat": 3172346,
+     "lo": 3098755,
+     "hi": 3250782
+    },
+    {
+     "t": "2027-02-14T18:20:00-05:00",
+     "actual": 3613295,
+     "yhat": 3453169,
+     "lo": 3372615,
+     "hi": 3535827
+    },
+    {
+     "t": "2027-02-14T18:25:00-05:00",
+     "actual": 3779401,
+     "yhat": 3728909,
+     "lo": 3657536,
+     "hi": 3805340
+    },
+    {
+     "t": "2027-02-14T18:30:00-05:00",
+     "actual": 3841480,
+     "yhat": 3884822,
+     "lo": 3781457,
+     "hi": 3977574
+    },
+    {
+     "t": "2027-02-14T18:35:00-05:00",
+     "actual": 3840349,
+     "yhat": 3917642,
+     "lo": 3811250,
+     "hi": 4019609
+    },
+    {
+     "t": "2027-02-14T18:40:00-05:00",
+     "actual": 3851261,
+     "yhat": 3950055,
+     "lo": 3836517,
+     "hi": 4045455
+    },
+    {
+     "t": "2027-02-14T18:45:00-05:00",
+     "actual": 3929914,
+     "yhat": 3982000,
+     "lo": 3870691,
+     "hi": 4086587
+    },
+    {
+     "t": "2027-02-14T18:50:00-05:00",
+     "actual": 3957311,
+     "yhat": 4015615,
+     "lo": 3902967,
+     "hi": 4129831
+    },
+    {
+     "t": "2027-02-14T18:55:00-05:00",
+     "actual": 3992626,
+     "yhat": 4053079,
+     "lo": 3937451,
+     "hi": 4166488
+    },
+    {
+     "t": "2027-02-14T19:00:00-05:00",
+     "actual": 3986689,
+     "yhat": 4064452,
+     "lo": 3959774,
+     "hi": 4180187
+    },
+    {
+     "t": "2027-02-14T19:05:00-05:00",
+     "actual": 4005810,
+     "yhat": 4065688,
+     "lo": 3960182,
+     "hi": 4179046
+    },
+    {
+     "t": "2027-02-14T19:10:00-05:00",
+     "actual": 4021030,
+     "yhat": 4077156,
+     "lo": 3958315,
+     "hi": 4181076
+    },
+    {
+     "t": "2027-02-14T19:15:00-05:00",
+     "actual": 3980775,
+     "yhat": 4075242,
+     "lo": 3957660,
+     "hi": 4178520
+    },
+    {
+     "t": "2027-02-14T19:20:00-05:00",
+     "actual": 3941950,
+     "yhat": 4069975,
+     "lo": 3954208,
+     "hi": 4178656
+    },
+    {
+     "t": "2027-02-14T19:25:00-05:00",
+     "actual": 3976532,
+     "yhat": 4071509,
+     "lo": 3958600,
+     "hi": 4178808
+    },
+    {
+     "t": "2027-02-14T19:30:00-05:00",
+     "actual": 3975813,
+     "yhat": 4068677,
+     "lo": 3959957,
+     "hi": 4175048
+    },
+    {
+     "t": "2027-02-14T19:35:00-05:00",
+     "actual": 3985547,
+     "yhat": 4067487,
+     "lo": 3959215,
+     "hi": 4181119
+    },
+    {
+     "t": "2027-02-14T19:40:00-05:00",
+     "actual": 3973196,
+     "yhat": 4071144,
+     "lo": 3960181,
+     "hi": 4179920
+    },
+    {
+     "t": "2027-02-14T19:45:00-05:00",
+     "actual": 3965920,
+     "yhat": 4071650,
+     "lo": 3957942,
+     "hi": 4179802
+    },
+    {
+     "t": "2027-02-14T19:50:00-05:00",
+     "actual": 4000703,
+     "yhat": 4066147,
+     "lo": 3958187,
+     "hi": 4181308
+    },
+    {
+     "t": "2027-02-14T19:55:00-05:00",
+     "actual": 4087372,
+     "yhat": 4067905,
+     "lo": 3956270,
+     "hi": 4177695
+    },
+    {
+     "t": "2027-02-14T20:00:00-05:00",
+     "actual": 4055177,
+     "yhat": 4067999,
+     "lo": 3954797,
+     "hi": 4181212
+    },
+    {
+     "t": "2027-02-14T20:05:00-05:00",
+     "actual": 4044898,
+     "yhat": 4070712,
+     "lo": 3967030,
+     "hi": 4180059
+    },
+    {
+     "t": "2027-02-14T20:10:00-05:00",
+     "actual": 4508973,
+     "yhat": 4222957,
+     "lo": 4097786,
+     "hi": 4319594
+    },
+    {
+     "t": "2027-02-14T20:15:00-05:00",
+     "actual": 9414005,
+     "yhat": 8858193,
+     "lo": 8266038,
+     "hi": 9610530
+    },
+    {
+     "t": "2027-02-14T20:20:00-05:00",
+     "actual": 9495730,
+     "yhat": 9599588,
+     "lo": 9019413,
+     "hi": 10516639
+    },
+    {
+     "t": "2027-02-14T20:25:00-05:00",
+     "actual": 9603491,
+     "yhat": 9599364,
+     "lo": 9035121,
+     "hi": 10560912
+    },
+    {
+     "t": "2027-02-14T20:30:00-05:00",
+     "actual": 9562915,
+     "yhat": 7073363,
+     "lo": 6679280,
+     "hi": 7467832
+    },
+    {
+     "t": "2027-02-14T20:35:00-05:00",
+     "actual": 4140653,
+     "yhat": 4164943,
+     "lo": 4054040,
+     "hi": 4273680
+    },
+    {
+     "t": "2027-02-14T20:40:00-05:00",
+     "actual": 4099265,
+     "yhat": 4152037,
+     "lo": 4044088,
+     "hi": 4259415
+    },
+    {
+     "t": "2027-02-14T20:45:00-05:00",
+     "actual": 4053089,
+     "yhat": 4148958,
+     "lo": 4040140,
+     "hi": 4261591
+    },
+    {
+     "t": "2027-02-14T20:50:00-05:00",
+     "actual": 4064190,
+     "yhat": 4151796,
+     "lo": 4042954,
+     "hi": 4261156
+    },
+    {
+     "t": "2027-02-14T20:55:00-05:00",
+     "actual": 4065564,
+     "yhat": 4148816,
+     "lo": 4037195,
+     "hi": 4259785
+    },
+    {
+     "t": "2027-02-14T21:00:00-05:00",
+     "actual": 4019601,
+     "yhat": 4146367,
+     "lo": 4037153,
+     "hi": 4255506
+    },
+    {
+     "t": "2027-02-14T21:05:00-05:00",
+     "actual": 4105946,
+     "yhat": 4149241,
+     "lo": 4036636,
+     "hi": 4257139
+    },
+    {
+     "t": "2027-02-14T21:10:00-05:00",
+     "actual": 4103800,
+     "yhat": 4152721,
+     "lo": 4043746,
+     "hi": 4266280
+    },
+    {
+     "t": "2027-02-14T21:15:00-05:00",
+     "actual": 4120285,
+     "yhat": 4153013,
+     "lo": 4039846,
+     "hi": 4266549
+    },
+    {
+     "t": "2027-02-14T21:20:00-05:00",
+     "actual": 4103305,
+     "yhat": 4144394,
+     "lo": 4035440,
+     "hi": 4254701
+    },
+    {
+     "t": "2027-02-14T21:25:00-05:00",
+     "actual": 4098881,
+     "yhat": 4145468,
+     "lo": 4037029,
+     "hi": 4267862
+    },
+    {
+     "t": "2027-02-14T21:30:00-05:00",
+     "actual": 4087185,
+     "yhat": 4143899,
+     "lo": 4040323,
+     "hi": 4258038
+    },
+    {
+     "t": "2027-02-14T21:35:00-05:00",
+     "actual": 4060934,
+     "yhat": 4144069,
+     "lo": 4027803,
+     "hi": 4261559
+    },
+    {
+     "t": "2027-02-14T21:40:00-05:00",
+     "actual": 4065664,
+     "yhat": 4146598,
+     "lo": 4034313,
+     "hi": 4263108
+    },
+    {
+     "t": "2027-02-14T21:45:00-05:00",
+     "actual": 4135698,
+     "yhat": 4145343,
+     "lo": 4040912,
+     "hi": 4262492
+    },
+    {
+     "t": "2027-02-14T21:50:00-05:00",
+     "actual": 4113997,
+     "yhat": 4147423,
+     "lo": 4038641,
+     "hi": 4262109
+    },
+    {
+     "t": "2027-02-14T21:55:00-05:00",
+     "actual": 4129524,
+     "yhat": 4146732,
+     "lo": 4034163,
+     "hi": 4262579
+    },
+    {
+     "t": "2027-02-14T22:00:00-05:00",
+     "actual": 4057719,
+     "yhat": 3973861,
+     "lo": 3857517,
+     "hi": 4078920
+    },
+    {
+     "t": "2027-02-14T22:05:00-05:00",
+     "actual": 3592753,
+     "yhat": 3574558,
+     "lo": 3475767,
+     "hi": 3674594
+    },
+    {
+     "t": "2027-02-14T22:10:00-05:00",
+     "actual": 3251954,
+     "yhat": 3187196,
+     "lo": 3112593,
+     "hi": 3278752
+    },
+    {
+     "t": "2027-02-14T22:15:00-05:00",
+     "actual": 2842725,
+     "yhat": 2803713,
+     "lo": 2728119,
+     "hi": 2877660
+    },
+    {
+     "t": "2027-02-14T22:20:00-05:00",
+     "actual": 2516354,
+     "yhat": 2415252,
+     "lo": 2358780,
+     "hi": 2482777
+    },
+    {
+     "t": "2027-02-14T22:25:00-05:00",
+     "actual": 2177070,
+     "yhat": 2028505,
+     "lo": 1975899,
+     "hi": 2085032
+    }
+   ],
+   "peak": {
+    "actual": 9603491,
+    "forecast": 9599588
+   },
+   "callout": {
+    "cdn": "CDN-C",
+    "metro": "DFW",
+    "metro_name": "Dallas-Fort Worth",
+    "util": 0.968,
+    "detail": "The only network cell forecast above 90% at the halftime peak. CDN-B in the same city was forecast at 80%."
+   },
+   "alert": {
+    "onset_t": "2027-02-14T20:17:00-05:00",
+    "detected_t": "2027-02-14T20:19:00-05:00",
+    "minutes_to_detect": 3,
+    "headline": "Roku viewers in Dallas on CDN-C: 10.6% buffering vs 1.0% normal",
+    "explanation": "Roku app 7.2.0 viewers in Dallas-Fort Worth on CDN-C started buffering at 8:17 PM. The anomaly rule flagged the cell at 8:19 PM, within 3 minutes.",
+    "cohort_label": "Roku app 7.2.0, Dallas-Fort Worth, CDN-C",
+    "observed": 0.10550875556387683,
+    "baseline": 0.009978043081624439,
+    "affected_sessions": 208498,
+    "ops": {
+     "t": "2027-02-14T20:26:00-05:00",
+     "resolved_t": "2027-02-14T20:36:00-05:00",
+     "minutes_to_resolve": 19,
+     "label": "Ops shifted traffic at 8:26 PM (19 minutes to resolve)"
+    }
+   },
+   "how_it_works": {
+    "panels": [
+     {
+      "title": "The forecast flagged Dallas before kickoff",
+      "body": "A LightGBM viewership forecast, registered in Unity Catalog, predicted the halftime peak by city and delivery network, and the one cell that would run hot.",
+      "products": [
+       "MLflow",
+       "Unity Catalog model registry",
+       "Serverless jobs"
+      ]
+     },
+     {
+      "title": "The alert is a rule, not AI",
+      "body": "A cell alerts when buffering stays far above its normal range for three minutes in a row. The alert text is a template filled from the alert row, so it can't drift from the data.",
+      "products": [
+       "Lakeflow Declarative Pipelines"
+      ]
+     },
+     {
+      "title": "A replay of the real night",
+      "body": "The chart replays recorded viewers against the forecast issued before kickoff.",
+      "products": []
+     }
+    ],
+    "facts": [
+     [
+      "Forecast model",
+      "cindy_wu_catalog.streamco.viewer_forecast"
+     ],
+     [
+      "Anomaly rule",
+      "buffering far above normal for 3 minutes in a row"
+     ],
+     [
+      "Alert",
+      "ALR-20270214-DFW-C-ROKU720"
+     ]
+    ]
+   }
+  },
+  "ask": {
+   "primary_question": "Why did Sports cancellations jump after the game?",
+   "followup_suggestions": [
+    "What about Originals?",
+    "Show cancels by state"
+   ],
+   "lanes": [
+    {
+     "lane": "subscribers",
+     "label": "Subscriber numbers",
+     "tools": [
+      "Genie Agent: StreamCo Subscriber Insights"
+     ],
+     "owner_system": "Metric view"
+    },
+    {
+     "lane": "playback",
+     "label": "Viewing quality",
+     "tools": [
+      "gold_anomaly_alerts",
+      "gold_playback_failures_by_device"
+     ],
+     "owner_system": "Event stream"
+    },
+    {
+     "lane": "billing",
+     "label": "Payments",
+     "tools": [
+      "gold_billing_failures"
+     ],
+     "owner_system": "Billing (PostgreSQL)"
+    },
+    {
+     "lane": "care",
+     "label": "Customer contacts",
+     "tools": [
+      "gold_contact_reasons"
+     ],
+     "owner_system": "Salesforce Service Cloud"
+    },
+    {
+     "lane": "knowledge",
+     "label": "Policies and support chats",
+     "tools": [
+      "AI Search: knowledge_idx"
+     ],
+     "owner_system": "Policy docs + support transcripts"
+    },
+    {
+     "lane": "baseline",
+     "label": "Expected vs unexplained",
+     "tools": [
+      "fn_cancel_drivers"
+     ],
+     "owner_system": "Metric view + ledger"
+    }
+   ],
+   "how_it_works": {
+    "panels": [
+     {
+      "title": "Six lines of investigation, in parallel",
+      "body": "Lane 1 is the Genie Agent over the metric view; lanes 2-4 and 6 query governed views and the fn_cancel_drivers function. The answer is written only from what they returned.",
+      "products": [
+       "Agent Bricks",
+       "Agent Runtime",
+       "Genie Agents",
+       "Unity Catalog functions"
+      ]
+     },
+     {
+      "title": "Your documents, cited",
+      "body": "Lane 5 searches StreamCo's policy documents and the masked support transcripts with AI Search. The answer quotes the payment retry policy and counts the support conversations behind the payment driver. Transcripts are masked and kids-only accounts are left out before anything is indexed.",
+      "products": [
+       "AI Search",
+       "Unity Gateway",
+       "Unity Catalog governed views"
+      ]
+     },
+     {
+      "title": "Follow-up questions go straight to Genie",
+      "body": "Genie answers from the certified metric definitions and shows the SQL it ran. When two sources disagree, it says so instead of guessing.",
+      "products": [
+       "Genie Agents",
+       "Metric Views"
+      ]
+     },
+     {
+      "title": "Every step is traced",
+      "body": "Each tool call, its SQL and its timing are recorded as an MLflow trace.",
+      "products": [
+       "MLflow tracing"
+      ]
+     }
+    ]
+   }
+  },
+  "save": {
+   "headline": {
+    "at_risk": 29963,
+    "projected_cancels_30d": 6696.375422248191,
+    "saved_point": 2100.0149821535197,
+    "saved_lo": 1283.3211534572583,
+    "saved_hi": 2911.636630972037,
+    "cost_usd": 41811.887500000004,
+    "revenue_protected_usd": 302150.15563224844,
+    "revenue_at_risk_usd": 963474
+   },
+   "model_card": {
+    "uc_name": "cindy_wu_catalog.streamco.churn_propensity",
+    "alias": "champion",
+    "version": "1",
+    "auc": 0.8033373249450113,
+    "scored": 299624,
+    "top_drivers": [
+     "Days since last watched",
+     "Worst buffering in one session",
+     "Watching less",
+     "Low viewing hours",
+     "Failed payment, never retried"
+    ],
+    "monitoring": {
+     "version": "1",
+     "trained_at": "2026-11-09T04:40:30.890Z",
+     "auc_train": 0.8033373249450113,
+     "auc_recent": 0.8084777099411902,
+     "recent_window": "2027-01-15",
+     "recent_window_n": 40057,
+     "auc_drop": -0.0051403849961788595,
+     "auc_by_window": [
+      {
+       "window": "2026-08-18",
+       "n": 40057,
+       "auc": 0.8046399508072324
+      },
+      {
+       "window": "2026-09-17",
+       "n": 40057,
+       "auc": 0.7916464323485903
+      },
+      {
+       "window": "2026-10-17",
+       "n": 40057,
+       "auc": 0.8087524588147923
+      },
+      {
+       "window": "2026-11-16",
+       "n": 40057,
+       "auc": 0.806328748318841
+      },
+      {
+       "window": "2026-12-16",
+       "n": 40057,
+       "auc": 0.8012659221942625
+      },
+      {
+       "window": "2027-01-15",
+       "n": 40057,
+       "auc": 0.8084777099411902
+      }
+     ],
+     "scoring_snapshot": "2027-02-15",
+     "score_psi": 0.0656856171009951,
+     "max_top_psi": 1.2799178236630744,
+     "max_top_psi_feature": "Days since last watched",
+     "status": "retrain",
+     "status_reason": "PSI above 0.2 on days since last watched (1.28), low viewing hours (0.49)",
+     "retrain_rule": "Retrain when PSI > 0.2 on a top-5 feature or AUC drops more than 0.03 from training; a challenger replaces the champion only if it beats it on the same held-out window.",
+     "retrain_short": "retrains when a top-5 feature drifts (PSI > 0.2) or AUC drops > 0.03",
+     "challenger_version": null,
+     "monitored_at": "2026-11-09T18:10:14.828Z",
+     "features": [
+      {
+       "feature": "days_since_last_session",
+       "label": "Days since last watched",
+       "rank": 1,
+       "is_top": true,
+       "psi": 1.2799178236630744,
+       "baseline_mean": 3.820578333333333,
+       "current_mean": 1.0899694283501988,
+       "drift": "high"
+      },
+      {
+       "feature": "hours_30d",
+       "label": "Low viewing hours",
+       "rank": 4,
+       "is_top": true,
+       "psi": 0.48752887627131136,
+       "baseline_mean": 15.57449335833334,
+       "current_mean": 11.679937321442871,
+       "drift": "high"
+      },
+      {
+       "feature": "max_session_rebuffer_min",
+       "label": "Worst buffering in one session",
+       "rank": 2,
+       "is_top": true,
+       "psi": 0.009753372918967097,
+       "baseline_mean": 2.7720876916666666,
+       "current_mean": 2.9120499692948503,
+       "drift": "low"
+      },
+      {
+       "feature": "engagement_trend",
+       "label": "Watching less",
+       "rank": 3,
+       "is_top": true,
+       "psi": 3.990970098115447e-05,
+       "baseline_mean": 0.00013580591666666647,
+       "current_mean": -0.0003080324006087633,
+       "drift": "low"
+      },
+      {
+       "feature": "decline_no_retry",
+       "label": "Failed payment, never retried",
+       "rank": 5,
+       "is_top": true,
+       "psi": 2.922698651218242e-06,
+       "baseline_mean": 0.04033916666666667,
+       "current_mean": 0.040003471017007984,
+       "drift": "low"
+      },
+      {
+       "feature": "plan_price",
+       "label": "Plan price",
+       "rank": 14,
+       "is_top": false,
+       "psi": 0.6715824800474697,
+       "baseline_mean": 12.244837500000008,
+       "current_mean": 11.924077376979154,
+       "drift": "high"
+      },
+      {
+       "feature": "tenure_days",
+       "label": "New subscriber",
+       "rank": 7,
+       "is_top": false,
+       "psi": 0.5293978224926063,
+       "baseline_mean": 487.40370916666666,
+       "current_mean": 322.9754559047339,
+       "drift": "high"
+      },
+      {
+       "feature": "active_days_30d",
+       "label": "Few active days",
+       "rank": 12,
+       "is_top": false,
+       "psi": 0.5116679175037555,
+       "baseline_mean": 17.657775833333332,
+       "current_mean": 12.313529623795157,
+       "drift": "high"
+      },
+      {
+       "feature": "signup_source",
+       "label": "How they signed up",
+       "rank": 13,
+       "is_top": false,
+       "psi": 0.1898342570705734,
+       "baseline_mean": null,
+       "current_mean": null,
+       "drift": "moderate"
+      },
+      {
+       "feature": "event_only_signup",
+       "label": "Joined for the event",
+       "rank": 11,
+       "is_top": false,
+       "psi": 0.18525744881611195,
+       "baseline_mean": 0.141865,
+       "current_mean": 0.3194136651269591,
+       "drift": "moderate"
+      },
+      {
+       "feature": "is_bundle",
+       "label": "Not on a bundle",
+       "rank": 8,
+       "is_top": false,
+       "psi": 0.014345738075983754,
+       "baseline_mean": 0.07965416666666666,
+       "current_mean": 0.05036312177929672,
+       "drift": "low"
+      },
+      {
+       "feature": "rebuffer_min_30d",
+       "label": "Buffering minutes",
+       "rank": 6,
+       "is_top": false,
+       "psi": 0.01221531725816864,
+       "baseline_mean": 5.8227946166666635,
+       "current_mean": 6.18302095292767,
+       "drift": "low"
+      },
+      {
+       "feature": "failed_starts_30d",
+       "label": "Streams that failed to start",
+       "rank": 15,
+       "is_top": false,
+       "psi": 0.003083367916671423,
+       "baseline_mean": 0.9921316666666666,
+       "current_mean": 1.0640335887645849,
+       "drift": "low"
+      },
+      {
+       "feature": "declines_30d",
+       "label": "Card declines",
+       "rank": 16,
+       "is_top": false,
+       "psi": 0.0013610499031296304,
+       "baseline_mean": 0.10789583333333333,
+       "current_mean": 0.12051104050409847,
+       "drift": "low"
+      },
+      {
+       "feature": "support_contacts_30d",
+       "label": "Contacted support",
+       "rank": 9,
+       "is_top": false,
+       "psi": 8.314783913591067e-06,
+       "baseline_mean": 0.27902666666666665,
+       "current_mean": 0.2801511227405014,
+       "drift": "low"
+      },
+      {
+       "feature": "pauses_90d",
+       "label": "Paused recently",
+       "rank": 10,
+       "is_top": false,
+       "psi": 5.151373904004209e-06,
+       "baseline_mean": 0.23406166666666667,
+       "current_mean": 0.23506795183296397,
+       "drift": "low"
+      }
+     ],
+     "outcomes": [
+      {
+       "card_id": "onboarding",
+       "title": "Welcome event sign-ups",
+       "save_rate": 0.3499786641674012,
+       "plan_save_rate": 0.3499786641674012,
+       "tests": [
+        {
+         "test_id": "HT-ONBO-PRE-1",
+         "run_date": "2026-02-23",
+         "n_treated": 3355,
+         "n_holdout": 3901,
+         "treated_rate": 0.24530551415797316,
+         "holdout_rate": 0.02999230966418867,
+         "lift": 0.2153132044937845
+        },
+        {
+         "test_id": "HT-ONBO-PRE-5",
+         "run_date": "2026-05-06",
+         "n_treated": 5844,
+         "n_holdout": 3600,
+         "treated_rate": 0.5147159479808351,
+         "holdout_rate": 0.03,
+         "lift": 0.48471594798083506
+        },
+        {
+         "test_id": "HT-ONBO-PRE-2",
+         "run_date": "2026-05-14",
+         "n_treated": 4215,
+         "n_holdout": 3040,
+         "treated_rate": 0.3594306049822064,
+         "holdout_rate": 0.02993421052631579,
+         "lift": 0.32949639445589063
+        },
+        {
+         "test_id": "HT-ONBO-PRE-3",
+         "run_date": "2026-06-22",
+         "n_treated": 3458,
+         "n_holdout": 3697,
+         "treated_rate": 0.4456333140543667,
+         "holdout_rate": 0.030024344062753585,
+         "lift": 0.4156089699916131
+        },
+        {
+         "test_id": "HT-ONBO-PRE-4",
+         "run_date": "2026-06-24",
+         "n_treated": 4659,
+         "n_holdout": 3164,
+         "treated_rate": 0.40051513200257566,
+         "holdout_rate": 0.03002528445006321,
+         "lift": 0.37048984755251246
+        },
+        {
+         "test_id": "HT-ONBO-PRE-6",
+         "run_date": "2026-06-28",
+         "n_treated": 3571,
+         "n_holdout": 4207,
+         "treated_rate": 0.31419770372444694,
+         "holdout_rate": 0.029950083194675542,
+         "lift": 0.28424762052977137
+        }
+       ]
+      },
+      {
+       "card_id": "payment",
+       "title": "Fix failed payments",
+       "save_rate": 0.4999890224004844,
+       "plan_save_rate": 0.4999890224004844,
+       "tests": [
+        {
+         "test_id": "HT-REPR-PRE-2",
+         "run_date": "2026-03-08",
+         "n_treated": 4624,
+         "n_holdout": 3764,
+         "treated_rate": 0.35423875432525953,
+         "holdout_rate": 0.03002125398512221,
+         "lift": 0.3242175003401373
+        },
+        {
+         "test_id": "HT-REPR-PRE-4",
+         "run_date": "2026-04-03",
+         "n_treated": 5536,
+         "n_holdout": 4305,
+         "treated_rate": 0.6157875722543352,
+         "holdout_rate": 0.029965156794425088,
+         "lift": 0.5858224154599101
+        },
+        {
+         "test_id": "HT-REPR-PRE-1",
+         "run_date": "2026-04-30",
+         "n_treated": 4571,
+         "n_holdout": 5625,
+         "treated_rate": 0.5567709472763072,
+         "holdout_rate": 0.030044444444444443,
+         "lift": 0.5267265028318627
+        },
+        {
+         "test_id": "HT-REPR-PRE-6",
+         "run_date": "2026-05-23",
+         "n_treated": 5639,
+         "n_holdout": 5718,
+         "treated_rate": 0.7057989005142756,
+         "holdout_rate": 0.030080447708989155,
+         "lift": 0.6757184528052864
+        },
+        {
+         "test_id": "HT-REPR-PRE-3",
+         "run_date": "2026-06-20",
+         "n_treated": 3460,
+         "n_holdout": 4548,
+         "treated_rate": 0.44421965317919077,
+         "holdout_rate": 0.02990325417766051,
+         "lift": 0.4143163990015303
+        },
+        {
+         "test_id": "HT-REPR-PRE-5",
+         "run_date": "2026-08-15",
+         "n_treated": 5141,
+         "n_holdout": 5220,
+         "treated_rate": 0.5032094923166699,
+         "holdout_rate": 0.03007662835249042,
+         "lift": 0.4731328639641795
+        }
+       ]
+      },
+      {
+       "card_id": "playback",
+       "title": "Make good for buffering",
+       "save_rate": 0.24995321002954352,
+       "plan_save_rate": 0.24995321002954352,
+       "tests": [
+        {
+         "test_id": "HT-CRED-PRE-6",
+         "run_date": "2026-05-06",
+         "n_treated": 4057,
+         "n_holdout": 4093,
+         "treated_rate": 0.2965245255114617,
+         "holdout_rate": 0.03005130710969949,
+         "lift": 0.2664732184017622
+        },
+        {
+         "test_id": "HT-CRED-PRE-3",
+         "run_date": "2026-05-09",
+         "n_treated": 3444,
+         "n_holdout": 5400,
+         "treated_rate": 0.227061556329849,
+         "holdout_rate": 0.03,
+         "lift": 0.197061556329849
+        },
+        {
+         "test_id": "HT-CRED-PRE-5",
+         "run_date": "2026-05-13",
+         "n_treated": 4321,
+         "n_holdout": 4854,
+         "treated_rate": 0.33279333487618606,
+         "holdout_rate": 0.030078285949732178,
+         "lift": 0.3027150489264539
+        },
+        {
+         "test_id": "HT-CRED-PRE-1",
+         "run_date": "2026-06-12",
+         "n_treated": 3526,
+         "n_holdout": 3296,
+         "treated_rate": 0.3885422575155984,
+         "holdout_rate": 0.030036407766990292,
+         "lift": 0.3585058497486081
+        },
+        {
+         "test_id": "HT-CRED-PRE-2",
+         "run_date": "2026-06-24",
+         "n_treated": 4451,
+         "n_holdout": 5806,
+         "treated_rate": 0.17142215232532015,
+         "holdout_rate": 0.029968997588701342,
+         "lift": 0.14145315473661882
+        },
+        {
+         "test_id": "HT-CRED-PRE-4",
+         "run_date": "2026-12-11",
+         "n_treated": 4563,
+         "n_holdout": 4814,
+         "treated_rate": 0.2634231865001096,
+         "holdout_rate": 0.029912754466140425,
+         "lift": 0.23351043203396918
+        }
+       ]
+      }
+     ],
+     "metric_id": "model_monitoring"
+    }
+   },
+   "cards": [
+    {
+     "card_id": "payment",
+     "title": "Fix failed payments",
+     "offer": "Retry the failed payment at no charge, so the account stays active",
+     "n_subscribers": 4556,
+     "expected_cancels": 1247.2996386961347,
+     "save_rate": 0.4999890224004844,
+     "saved_point": 623.6361269921578,
+     "saved_lo": 406.8104461174509,
+     "saved_hi": 840.8802933594828,
+     "cost_usd": 1822.4,
+     "revenue_protected_usd": 89728.76595163166,
+     "who": "Signed up at halftime, payment timed out",
+     "policy": "1. Payment failures: Involuntary (payment) cancellations receive a free payment retry. No discount or credit is offered.",
+     "policy_source": "Save-offer policy"
+    },
+    {
+     "card_id": "playback",
+     "title": "Make good for buffering",
+     "offer": "One month of service credit and a replay of the moments they missed",
+     "n_subscribers": 13165,
+     "expected_cancels": 3216.786782229499,
+     "save_rate": 0.24995321002954352,
+     "saved_point": 804.0461821988694,
+     "saved_lo": 459.1228329483148,
+     "saved_hi": 1144.100954836738,
+     "cost_usd": 39462.0875,
+     "revenue_protected_usd": 115686.16469477332,
+     "who": "Buffered during halftime",
+     "policy": "2. Service failures: Subscribers with a verified service failure may receive one one-month credit per 12 months.",
+     "policy_source": "Save-offer policy"
+    },
+    {
+     "card_id": "onboarding",
+     "title": "Welcome event sign-ups",
+     "offer": "A welcome message with what to watch next",
+     "n_subscribers": 10548,
+     "expected_cancels": 1921.0676015407148,
+     "save_rate": 0.3499786641674012,
+     "saved_point": 672.3326729624928,
+     "saved_lo": 417.38787439149263,
+     "saved_hi": 926.6553827758158,
+     "cost_usd": 527.4,
+     "revenue_protected_usd": 96735.22498584347,
+     "who": "Joined for the game, still new",
+     "policy": "3. New event sign-ups: Event sign-ups in their first 30 days receive onboarding messages only. No discount is offered.",
+     "policy_source": "Save-offer policy"
+    }
+   ],
+   "samples": [
+    {
+     "sample_id": "marcus",
+     "subscriber_id": 643364,
+     "card_id": "playback",
+     "first_name": "Marcus",
+     "metro": "DFW",
+     "metro_name": "Dallas-Fort Worth",
+     "tier": "Sports",
+     "device": "Roku 7.2.0",
+     "tenure_months": 26,
+     "what_happened": "14 minutes of buffering during the halftime show",
+     "fav_genre": "Live sports",
+     "recent_titles": [
+      "The Big Game",
+      "Fourth Down Stories",
+      "Sunday Rewind"
+     ],
+     "message": {
+      "subject": "We're sorry about the halftime buffering",
+      "body": "Hi Marcus, you had 14 minutes of buffering during the halftime show, and StreamCo let you down. We'd like to make it right with one month of service credit and a replay of the moments you missed. For more live sports, try Fourth Down Stories: Season 2. We hope your next stream is a great one.",
+      "watch_next": "Fourth Down Stories: Season 2",
+      "agent_note": "Marcus experienced 14 minutes of buffering during the halftime show. Offer one month of service credit and a replay of the missed moments. Suggest Fourth Down Stories: Season 2.",
+      "model": "system.ai.gpt-5-6-sol"
+     }
+    },
+    {
+     "sample_id": "priya",
+     "subscriber_id": 1611257,
+     "card_id": "payment",
+     "first_name": "Priya",
+     "metro": "PHX",
+     "metro_name": "Phoenix",
+     "tier": "Bundle",
+     "device": "Smart TV",
+     "tenure_months": 9,
+     "what_happened": "renewal card declined twice by a processor timeout at 8:20 PM, not retried",
+     "fav_genre": "Drama",
+     "recent_titles": [
+      "Harbor Lights",
+      "The Big Game",
+      "Quiet Hours"
+     ],
+     "message": {
+      "subject": "We\u2019re sorry we didn\u2019t retry your renewal",
+      "body": "Hi Priya, your renewal card was declined twice after a processor timeout at 8:20 PM, and we didn\u2019t retry it. We can retry the failed payment at no charge so your account stays active. For your next drama, try Harbor Lights: Season 3. We hope you enjoy being back.",
+      "watch_next": "Harbor Lights: Season 3",
+      "agent_note": "The renewal card was declined twice after a processor timeout and wasn\u2019t retried. Offer to retry the failed payment at no charge so the account stays active. Suggest Harbor Lights: Season 3.",
+      "model": "system.ai.gpt-5-6-sol"
+     }
+    },
+    {
+     "sample_id": "jordan",
+     "subscriber_id": 3877967,
+     "card_id": "onboarding",
+     "first_name": "Jordan",
+     "metro": "CHI",
+     "metro_name": "Chicago",
+     "tier": "Sports",
+     "device": "iPhone",
+     "tenure_months": 0,
+     "what_happened": "signed up during the game and has watched nothing else",
+     "fav_genre": "Sports docs",
+     "recent_titles": [
+      "The Big Game"
+     ],
+     "message": {
+      "subject": "Welcome after The Big Game, Jordan",
+      "body": "Hi Jordan, you signed up during The Big Game and haven\u2019t watched anything else yet. Welcome to StreamCo\u2014we\u2019re glad you\u2019re here. Since you enjoy sports docs, Road to the Big Game could be a great next watch. We hope you enjoy it!",
+      "watch_next": "Road to the Big Game",
+      "agent_note": "Jordan signed up during The Big Game and hasn\u2019t watched anything else. Offer a warm welcome with a next-watch suggestion only. Recommend Road to the Big Game.",
+      "model": "system.ai.gpt-5-6-sol"
+     }
+    }
+   ],
+   "run": {
+    "n_messages": 28269,
+    "cost_usd": 57.58,
+    "model": "system.ai.gpt-5-6-sol"
+   },
+   "assumptions": "Revenue assumes $11.99/month for 12 months, gross. Ranges are 80% ranges from past holdout tests.",
+   "how_it_works": {
+    "panels": [
+     {
+      "title": "The churn model",
+      "body": "One model, registered in Unity Catalog with the alias champion, scores every eligible subscriber from viewing quality, payment and engagement features.",
+      "products": [
+       "MLflow",
+       "Unity Catalog model registry"
+      ]
+     },
+     {
+      "title": "Monitored, and retrained by rule",
+      "body": "After every scoring run, a monitoring job compares accuracy on the latest labelled month with accuracy at training, and measures drift (PSI) on the model's top features between the training months and the post-game snapshot. When the rule trips, a challenger is trained and replaces the champion only if it scores better on the same held-out month.",
+      "products": [
+       "MLflow",
+       "Unity Catalog model registry",
+       "Lakeflow Jobs"
+      ]
+     },
+     {
+      "title": "Learning from outcomes",
+      "body": "Save rates come from past holdout tests (treated minus holdout), with an 80% range. Every new test the plan runs is added to the same table, so the next plan is sized from what actually worked.",
+      "products": [
+       "Delta tables"
+      ]
+     },
+     {
+      "title": "A different message for every subscriber",
+      "body": "ai_query writes one message per at-risk subscriber in a single batch through Unity Gateway. Personal data is masked and kids profiles are filtered before the model sees anything. Regenerate writes a new one live, with the same prompt and rules.",
+      "products": [
+       "AI Functions",
+       "Unity Gateway",
+       "Unity Catalog governed views"
+      ]
+     },
+     {
+      "title": "Served from Lakebase",
+      "body": "Churn scores and messages are synced from Unity Catalog into Lakebase, the Postgres database the app and support tools read one subscriber at a time, in milliseconds. Each card shows its subscriber's live row.",
+      "products": [
+       "Lakebase",
+       "Lakebase synced tables",
+       "Unity Catalog"
+      ]
+     },
+     {
+      "title": "Approval, then action",
+      "body": "Nothing is sent until a person approves. The approval is written to an app-owned table in Lakebase.",
+      "products": [
+       "Lakebase"
+      ]
+     }
+    ]
+   }
+  },
+  "governance": {
+   "seeded_note": "Budgets and usage figures are seeded for the demo (system.ai_gateway.usage holds the real log).",
+   "usage": {
+    "calls": 172,
+    "redactions": 1600,
+    "by_service": [
+     {
+      "service": "Model: gpt-5-6-sol",
+      "calls": 118
+     },
+     {
+      "service": "Agent tools",
+      "calls": 41
+     },
+     {
+      "service": "Genie Agent",
+      "calls": 13
+     }
+    ],
+    "costs": [
+     {
+      "label": "Ask: one investigation",
+      "usd": 0.3
+     },
+     {
+      "label": "Personalized messages for 28.3k",
+      "usd": 57.58
+     }
+    ]
+   },
+   "live_usage": null,
+   "budgets": [
+    {
+     "team": "Commerce Data",
+     "monthly_budget_usd": 5000,
+     "spend_usd": 3100,
+     "budget_pct": 0.62,
+     "alert_pct": 0.9,
+     "status": "ok"
+    },
+    {
+     "team": "Media Engineering",
+     "monthly_budget_usd": 4000,
+     "spend_usd": 1920,
+     "budget_pct": 0.48,
+     "alert_pct": 0.9,
+     "status": "ok"
+    },
+    {
+     "team": "Support AI",
+     "monthly_budget_usd": 2500,
+     "spend_usd": 2275,
+     "budget_pct": 0.91,
+     "alert_pct": 0.9,
+     "status": "alert"
+    }
+   ],
+   "masking": {
+    "masked_text": "Agent: Hello! You're chatting with the support team. How can I help?\nCustomer: Your system declined my card at sign-up and did not retry, so the account was closed.\nAgent: Let me pull up your account. Can you confirm a few details?\nCustomer: Honestly I'm pretty frustrated. The charge was on my card ending in [CARD]. My address is [ADDRESS].\nAgent: Which device were you using at the time?\nCustomer: I tried restarting everything already. My email on the account is [EMAIL]. You can call me back at [PHONE].\nAgent: When did you first notice this?\nCustomer: I tried restarting everything already.\nAgent: Thanks for your patience. I've logged this and we'll get back to you.\nCustomer: Alright, appreciate it.",
+    "unmasked_text": "Agent: Hello! You're chatting with the support team. How can I help?\nCustomer: Your system declined my card at sign-up and did not retry, so the account was closed.\nAgent: Let me pull up your account. Can you confirm a few details?\nCustomer: Honestly I'm pretty frustrated. The charge was on my card ending in [CARD]. My address is [ADDRESS].\nAgent: Which device were you using at the time?\nCustomer: I tried restarting everything already. My email on the account is [EMAIL]. You can call me back at [PHONE].\nAgent: When did you first notice this?\nCustomer: I tried restarting everything already.\nAgent: Thanks for your patience. I've logged this and we'll get back to you.\nCustomer: Alright, appreciate it.",
+    "n_redactions": 4
+   },
+   "trace": {
+    "label": "Ask: why did Sports cancellations jump?",
+    "url": null,
+    "steps": 7,
+    "duration_s": 30.5
+   },
+   "how_it_works": {
+    "panels": [
+     {
+      "title": "One front door for every AI call",
+      "body": "Every model call in this demo, from the Ask agent, Genie and the personalized messages, goes through Unity Gateway with budgets, rate limits and usage logs.",
+      "products": [
+       "Unity Gateway",
+       "System tables"
+      ]
+     },
+     {
+      "title": "Masked before AI sees it",
+      "body": "Every screen, model and prompt reads through governed views that mask personal data and drop kids profiles. The prompt is never the control. In production the same rules move onto the tables as column masks and row filters.",
+      "products": [
+       "Unity Catalog governed views"
+      ]
+     }
+    ]
+   }
+  }
+ },
+ "ask_run": {
+  "question": "Why did Sports cancellations jump after the game?",
+  "variants": [
+   "Why did Sports cancellations spike after the Big Game?",
+   "What caused the Sports cancel spike?"
+  ],
+  "trace": [
+   {
+    "offset_ms": 0,
+    "event": "lane_start",
+    "data": {
+     "lane": "subscribers",
+     "label": "Subscriber numbers",
+     "tools": [
+      "Genie Agent: StreamCo Subscriber Insights"
+     ],
+     "owner_system": "Metric view"
+    }
+   },
+   {
+    "offset_ms": 0,
+    "event": "lane_start",
+    "data": {
+     "lane": "playback",
+     "label": "Viewing quality",
+     "tools": [
+      "gold_anomaly_alerts",
+      "gold_playback_failures_by_device"
+     ],
+     "owner_system": "Event stream"
+    }
+   },
+   {
+    "offset_ms": 0,
+    "event": "lane_start",
+    "data": {
+     "lane": "billing",
+     "label": "Payments",
+     "tools": [
+      "gold_billing_failures"
+     ],
+     "owner_system": "Billing (PostgreSQL)"
+    }
+   },
+   {
+    "offset_ms": 0,
+    "event": "lane_start",
+    "data": {
+     "lane": "care",
+     "label": "Customer contacts",
+     "tools": [
+      "gold_contact_reasons"
+     ],
+     "owner_system": "Salesforce Service Cloud"
+    }
+   },
+   {
+    "offset_ms": 0,
+    "event": "lane_start",
+    "data": {
+     "lane": "knowledge",
+     "label": "Policies and support chats",
+     "tools": [
+      "AI Search: knowledge_idx"
+     ],
+     "owner_system": "Policy docs + support transcripts"
+    }
+   },
+   {
+    "offset_ms": 0,
+    "event": "lane_start",
+    "data": {
+     "lane": "baseline",
+     "label": "Expected vs unexplained",
+     "tools": [
+      "fn_cancel_drivers"
+     ],
+     "owner_system": "Metric view + ledger"
+    }
+   },
+   {
+    "offset_ms": 1520,
+    "event": "lane_done",
+    "data": {
+     "lane": "billing",
+     "status": "ok",
+     "duration_ms": 1520,
+     "summary": "Acquirer B declines rose from 3% to 15% (processor_timeout) during the halftime hour.",
+     "sql_text": "SELECT acquirer, SUM(IF(in_window, declines, 0)) / NULLIF(SUM(IF(in_window, attempts, 0)), 0) AS window_rate, SUM(IF(in_window, 0, declines)) / NULLIF(SUM(IF(in_window, 0, attempts)), 0) AS normal_rate, MAX_BY(top_decline_code, IF(in_window, declines, 0)) AS top_decline_code, AVG(IF(in_window, retry_scheduled_rate, NULL)) AS retry_rate FROM (SELECT *, hour_ts >= TIMESTAMP'2027-02-15 01:00:00' AND hour_ts < TIMESTAMP'2027-02-15 02:00:00' AS in_window FROM gold_billing_failures WHERE hour_ts >= TIMESTAMP'2027-02-14 23:00:00' AND hour_ts < TIMESTAMP'2027-02-15 03:30:00') GROUP BY acquirer ORDER BY window_rate DESC",
+     "row_count": 4
+    }
+   },
+   {
+    "offset_ms": 1528,
+    "event": "lane_done",
+    "data": {
+     "lane": "care",
+     "status": "ok",
+     "duration_ms": 1527,
+     "summary": "About 3,300 extra support contacts overnight: 42% stream froze at halftime, 33% charged / card declined / account cancelled, 25% other.",
+     "sql_text": "SELECT reason_code, SUM(n_excess) AS n_excess, SUM(n_contacts) AS n_contacts FROM gold_contact_reasons WHERE day IN (DATE'2027-02-14', DATE'2027-02-15') GROUP BY reason_code ORDER BY n_excess DESC",
+     "row_count": 10
+    }
+   },
+   {
+    "offset_ms": 1623,
+    "event": "lane_done",
+    "data": {
+     "lane": "playback",
+     "status": "ok",
+     "duration_ms": 1623,
+     "summary": "One cell failed: CDN-C x Dallas-Fort Worth x Roku 7.2.0, flagged at 8:19 PM, buffering 1.0% to 10.6%. Every other cell stayed within its normal range.",
+     "sql_text": "SELECT alert_id, detected_ts, cdn, metro, device_family, app_version, observed, baseline, persistence_min, affected_sessions, resolved_ts FROM gold_anomaly_alerts ORDER BY detected_ts LIMIT 5;\nSELECT cdn, metro, device_family, app_version, sessions, rebuffer_ratio FROM gold_playback_failures_by_device WHERE day = DATE'2027-02-14' ORDER BY rebuffer_ratio DESC LIMIT 12",
+     "row_count": 13
+    }
+   },
+   {
+    "offset_ms": 1950,
+    "event": "lane_done",
+    "data": {
+     "lane": "baseline",
+     "status": "ok",
+     "duration_ms": 1949,
+     "summary": "Event-only sign-ups cancelled at the expected rate (30% of the excess). 7% of the excess has no signal.",
+     "sql_text": "SELECT driver, n_cancels, pct, evidence_type, confidence, evidence FROM fn_cancel_drivers(DATE'2027-02-15', 'Sports') WHERE driver IS NOT NULL",
+     "row_count": 5
+    }
+   },
+   {
+    "offset_ms": 2841,
+    "event": "lane_done",
+    "data": {
+     "lane": "knowledge",
+     "status": "ok",
+     "duration_ms": 2840,
+     "summary": "Payment retry policy, 2. Decline codes without a retry: \"The decline code processor_timeout is not on the retry list. Accounts declined with this code are not retried and cancel automatically when the 24-hour grace window ends.\" 965 Sports support conversations: charged / card declined / account cancelled.",
+     "sql_text": "-- AI Search over cindy_wu_catalog.streamco.knowledge_idx\n-- query_text: 'sign-up payment declined: which decline codes are retried, and the grace window before cancelling', filters: doc_type = 'policy', k = 2\n-- query_text: 'I was charged, my card was declined and my account was cancelled', filters: doc_type = 'transcript', tier = 'Sports', k = 3\nSELECT reason_code, tier, count(*) AS n_conversations FROM knowledge_chunks WHERE doc_type = 'transcript' AND reason_code = 'charged_declined_cancelled' AND tier = 'Sports' GROUP BY reason_code, tier",
+     "row_count": 5
+    }
+   },
+   {
+    "offset_ms": 19305,
+    "event": "lane_done",
+    "data": {
+     "lane": "subscribers",
+     "status": "ok",
+     "duration_ms": 19305,
+     "summary": "You want to see how many Sports cancellations occurred on February 15, 2027, compared to the expected number of cancellations for that day. On **2027-02-15**, **Sports** had **15,800** governed cancellations, with reconciliation status **within_tolerance**.",
+     "sql_text": "WITH `sports_cancels` AS (\n  SELECT\n    `day`,\n    `tier`,\n    MEASURE(`cancels`) AS `governed_cancels`\n  FROM `cindy_wu_catalog`.`streamco`.`mv_streamco_metrics`\n  WHERE `day` = DATE'2027-02-15'\n    AND `tier` = 'Sports'\n  GROUP BY ALL\n)\nSELECT\n  r.`day`,\n  r.`tier`,\n  s.`governed_cancels`,\n  r.`subscriber_live_cancels`,\n  r.`ledger_cancels`,\n  r.`pct_diff`,\n  r.`status`,\n  r.`likely_cause`,\n  e.`yhat` AS `expected_cancels`,\n  e.`lo` AS `expected_lo`,\n  e.`hi` AS `expected_hi`,\n  e.`actual` AS `expected_table_actual`,\n  e.`outside_band`\nFROM `cindy_wu_catalog`.`streamco`.`gold_reconciliation_daily` r\nLEFT JOIN `sports_cancels` s\n  ON r.`day` = s.`day` AND r.`tier` = s.`tier`\nLEFT JOIN `cindy_wu_catalog`.`streamco`.`gold_cancel_expected` e\n  ON r.`day` = e.`day` AND r.`tier` = e.`tier`\nWHERE r.`day` = DATE'2027-02-15'\n  AND r.`tier` = 'Sports'",
+     "row_count": 1
+    }
+   },
+   {
+    "offset_ms": 30518,
+    "event": "answer",
+    "data": {
+     "question": "Why did Sports cancellations jump after the game?",
+     "headline": "Nearly two-thirds of the extra cancellations trace to the same 20 minutes of halftime.",
+     "narrative": "Sports recorded 15,800 cancellations versus 8,977 expected. Of the excess, playback issues accounted for 2,302 cancellations (33.7%), event-only churn for 2,064 (30.3%), payment failures for 1,999 (29.3%), and unexplained causes for 458 (6.7%). The \u201cPayment retry policy\u201d says declined sign-ups are retried once after 1 hour, but processor timeouts were excluded from retries and instead cancelled when the 24-hour grace window expired. In addition, 965 Sports support conversations said customers were charged, declined and cancelled. The Finance ledger recorded 15,760 cancellations versus 15,800 observed, a 0.25% difference that was within tolerance.",
+     "source": "recorded",
+     "total": {
+      "observed": 15800,
+      "expected": 8977,
+      "excess": 6823,
+      "pct_over": 0.7600534699788348,
+      "band_lo": 8327,
+      "band_hi": 9627
+     },
+     "drivers": [
+      {
+       "driver": "playback",
+       "label": "Couldn't watch halftime properly",
+       "pct": 0.3373882456397479,
+       "n_cancels": 2302,
+       "evidence_type": "inferred",
+       "confidence": "high",
+       "evidence": "Voluntary cancels by viewers with 5+ minutes of buffering in the alerted cell that night (silver_sessions, gold_anomaly_alerts)",
+       "metric_id": "cancel_driver_playback"
+      },
+      {
+       "driver": "payment",
+       "label": "Sign-up payment timed out, never retried",
+       "pct": 0.2929796277297377,
+       "n_cancels": 1999,
+       "evidence_type": "observed",
+       "confidence": "high",
+       "evidence": "Involuntary cancels after a processor_timeout sign-up decline with no retry and an expired 24 h grace window (fact_billing_attempts); wins any overlap with playback",
+       "metric_id": "cancel_driver_payment"
+      },
+      {
+       "driver": "event_only",
+       "label": "Expected event-only cancels",
+       "pct": 0.30250622893155504,
+       "n_cancels": 2064,
+       "evidence_type": "expected",
+       "confidence": "high",
+       "evidence": "event_promo sign-ups cancelling within 24 h: 2.9% on this night vs 2.8% and 2.9% on the prior big-game nights",
+       "metric_id": "cancel_driver_event_only"
+      },
+      {
+       "driver": "unexplained",
+       "label": "Unexplained",
+       "pct": 0.06712589769895941,
+       "n_cancels": 458,
+       "evidence_type": "unexplained",
+       "confidence": "low",
+       "evidence": "Cancels above the baseline that match none of the rules above",
+       "metric_id": "cancel_driver_unexplained"
+      }
+     ],
+     "reconciliation": {
+      "status": "within_tolerance",
+      "subscriber_live": 15800,
+      "ledger": 15760,
+      "pct_diff": 0.002531645569620253
+     },
+     "declined": false,
+     "drivers_sql": "SELECT driver, n_cancels, pct, evidence_type, confidence, evidence FROM fn_cancel_drivers(DATE'2027-02-15', 'Sports') WHERE driver IS NOT NULL",
+     "citations": [
+      {
+       "doc_type": "policy",
+       "doc_title": "Payment retry policy",
+       "section": "2. Decline codes without a retry",
+       "quote": "The decline code processor_timeout is not on the retry list. Accounts declined with this code are not retried and cancel automatically when the 24-hour grace window ends.",
+       "n_conversations": null,
+       "tier": null
+      },
+      {
+       "doc_type": "transcript",
+       "doc_title": "Support email transcript",
+       "section": "charged, card declined, account cancelled",
+       "quote": "I signed up during the game, my card was declined, and now my account says cancelled.",
+       "n_conversations": 965,
+       "tier": "Sports"
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "followups": [
+  {
+   "variants": [
+    "What about Originals?",
+    "Did Originals cancellations go up too?"
+   ],
+   "answer": {
+    "question": "What about Originals?",
+    "conversation_id": "01f1dfb54b2f19fb92fbe5e7d4ee83f9",
+    "message_id": "01f1dfb54b39167aafcb374d184d7524",
+    "text": "You want to see the cancellation reconciliation details for the Originals subscription tier on February 15, 2027.\n\nFor **Originals** on **2027-02-15**, I **can\u2019t give a confident cancellation count** because reconciliation status is **sources_disagree**. The two reported figures are **4,017** cancellations in **Subscriber Live** and **4,268** cancellations in the **Finance ledger**, a gap of **251** or **6.2%**, so **Originals** is unconfirmed until the sources are reconciled.",
+    "sql": "SELECT `tier`, `subscriber_live_cancels`, `ledger_cancels`, `pct_diff`, `status` FROM `cindy_wu_catalog`.`streamco`.`gold_reconciliation_daily` WHERE `day` = DATE'2027-02-15' AND `tier` = 'Originals'",
+    "columns": [
+     "tier",
+     "subscriber_live_cancels",
+     "ledger_cancels",
+     "pct_diff",
+     "status"
+    ],
+    "rows": [
+     [
+      "Originals",
+      4017,
+      4268,
+      0.062484441125217824,
+      "sources_disagree"
+     ]
+    ],
+    "duration_ms": 9202,
+    "declined": true
+   }
+  },
+  {
+   "variants": [
+    "Show cancels by state",
+    "Which states had the most cancellations?"
+   ],
+   "answer": {
+    "question": "Show cancels by state",
+    "conversation_id": "01f1dfb54b2f19fb92fbe5e7d4ee83f9",
+    "message_id": "01f1dfb550b5135a964109ab41e9675d",
+    "text": "You want to see the number of cancellations for the Sports subscription tier on February 15, 2027, broken down by US state, ordered from the state with the most cancellations to the least.\n\nFor **Sports** on **2027-02-15**, cancellations were highest in **Texas** and lowest in **Wyoming** across **51 states/jurisdictions** shown. Examples include:\n- **Texas:** **3,488**\n- **California:** **1,606**\n- **Florida:** **894**\n- **New York:** **761**\n- **Pennsylvania:** **543**\n\nThis shows Sports cancellations were heavily concentrated in a few large states, with a steep drop after Texas and California.",
+    "sql": "SELECT `state`, MEASURE(`cancels`) AS `cancels`\nFROM `cindy_wu_catalog`.`streamco`.`mv_streamco_metrics`\nWHERE `day` = DATE'2027-02-15'\n  AND `tier` = 'Sports'\n  AND `state` IS NOT NULL\nGROUP BY ALL\nORDER BY `cancels` DESC",
+    "columns": [
+     "state",
+     "cancels"
+    ],
+    "rows": [
+     [
+      "Texas",
+      3488
+     ],
+     [
+      "California",
+      1606
+     ],
+     [
+      "Florida",
+      894
+     ],
+     [
+      "New York",
+      761
+     ],
+     [
+      "Pennsylvania",
+      543
+     ],
+     [
+      "Illinois",
+      509
+     ],
+     [
+      "Georgia",
+      467
+     ],
+     [
+      "North Carolina",
+      460
+     ],
+     [
+      "Ohio",
+      447
+     ],
+     [
+      "Michigan",
+      406
+     ],
+     [
+      "New Jersey",
+      390
+     ],
+     [
+      "Virginia",
+      335
+     ],
+     [
+      "Washington",
+      327
+     ],
+     [
+      "Tennessee",
+      300
+     ],
+     [
+      "Arizona",
+      296
+     ],
+     [
+      "Massachusetts",
+      277
+     ],
+     [
+      "Indiana",
+      259
+     ],
+     [
+      "Wisconsin",
+      248
+     ],
+     [
+      "Missouri",
+      248
+     ],
+     [
+      "Maryland",
+      243
+     ],
+     [
+      "Colorado",
+      235
+     ],
+     [
+      "Minnesota",
+      232
+     ],
+     [
+      "Alabama",
+      215
+     ],
+     [
+      "South Carolina",
+      213
+     ],
+     [
+      "Louisiana",
+      190
+     ],
+     [
+      "Kentucky",
+      189
+     ],
+     [
+      "Oregon",
+      169
+     ],
+     [
+      "Oklahoma",
+      167
+     ],
+     [
+      "Connecticut",
+      153
+     ],
+     [
+      "Utah",
+      140
+     ],
+     [
+      "Arkansas",
+      128
+     ],
+     [
+      "Iowa",
+      127
+     ],
+     [
+      "Nevada",
+      127
+     ],
+     [
+      "Kansas",
+      115
+     ],
+     [
+      "Mississippi",
+      115
+     ],
+     [
+      "Idaho",
+      84
+     ],
+     [
+      "New Mexico",
+      80
+     ],
+     [
+      "Nebraska",
+      78
+     ],
+     [
+      "West Virginia",
+      66
+     ],
+     [
+      "Hawaii",
+      58
+     ],
+     [
+      "New Hampshire",
+      55
+     ],
+     [
+      "Maine",
+      53
+     ],
+     [
+      "Rhode Island",
+      46
+     ],
+     [
+      "Montana",
+      45
+     ],
+     [
+      "Delaware",
+      40
+     ],
+     [
+      "South Dakota",
+      38
+     ],
+     [
+      "North Dakota",
+      31
+     ],
+     [
+      "Alaska",
+      30
+     ],
+     [
+      "District of Columbia",
+      28
+     ],
+     [
+      "Vermont",
+      26
+     ],
+     [
+      "Wyoming",
+      23
+     ]
+    ],
+    "duration_ms": 10215,
+    "declined": false
+   }
+  }
+ ],
+ "provenance": {
+  "source_systems": {
+   "label": "Rows landed from each source system",
+   "sql": "SELECT source_id, display_name, system_type, prod_connector, bronze_tables, row_count FROM ref_source_systems",
+   "tables": [
+    "ref_source_systems"
+   ],
+   "owner_system": "Unity Catalog",
+   "columns": [
+    "source_id",
+    "display_name",
+    "system_type",
+    "prod_connector",
+    "bronze_tables",
+    "row_count"
+   ],
+   "rows": [
+    [
+     "subscriptions",
+     "Subscriptions & accounts",
+     "MySQL",
+     "Lakeflow Connect (CDC)",
+     [
+      "bronze_mysql_subscriptions",
+      "bronze_mysql_accounts"
+     ],
+     5047247
+    ],
+    [
+     "billing",
+     "Billing & payment retries",
+     "PostgreSQL",
+     "Lakeflow Connect (CDC)",
+     [
+      "bronze_pg_billing_attempts"
+     ],
+     502264
+    ],
+    [
+     "support",
+     "Support cases & transcripts",
+     "Salesforce Service Cloud (SaaS)",
+     "Lakeflow Connect (SaaS connector)",
+     [
+      "bronze_sfdc_support_cases"
+     ],
+     37036
+    ],
+    [
+     "payments",
+     "Payment processor events",
+     "Payment processor API (SaaS)",
+     "Webhook to Zerobus Ingest",
+     [
+      "bronze_processor_events"
+     ],
+     482831
+    ],
+    [
+     "telemetry",
+     "Playback & CDN telemetry",
+     "Event stream",
+     "Zerobus Ingest / Kafka",
+     [
+      "bronze_session_events",
+      "bronze_cdn_telemetry"
+     ],
+     4350064
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "team_cancels_product": {
+   "label": "Product's cancel count",
+   "sql": "SELECT team, count, definition, governed_count, governed_definition FROM gold_team_cancel_counts",
+   "tables": [
+    "gold_team_cancel_counts"
+   ],
+   "owner_system": "Product analytics",
+   "columns": [
+    "team",
+    "count",
+    "definition",
+    "governed_count",
+    "governed_definition"
+   ],
+   "rows": [
+    [
+     "Product analytics",
+     17108,
+     "cancel button clicks in the app, including people who were saved or changed their mind",
+     15800,
+     "Effective cancellations: subscription ended, net of reversals within 24 hours, reconciled to the billing ledger."
+    ],
+    [
+     "Finance",
+     15760,
+     "billing ledger, counted when the final charge is reversed",
+     15800,
+     "Effective cancellations: subscription ended, net of reversals within 24 hours, reconciled to the billing ledger."
+    ],
+    [
+     "Customer care",
+     12851,
+     "cancellations that came through a support contact",
+     15800,
+     "Effective cancellations: subscription ended, net of reversals within 24 hours, reconciled to the billing ledger."
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "team_cancels_finance": {
+   "label": "Finance's cancel count",
+   "sql": "SELECT team, count, definition, governed_count, governed_definition FROM gold_team_cancel_counts",
+   "tables": [
+    "gold_team_cancel_counts"
+   ],
+   "owner_system": "Billing ledger",
+   "columns": [
+    "team",
+    "count",
+    "definition",
+    "governed_count",
+    "governed_definition"
+   ],
+   "rows": [
+    [
+     "Product analytics",
+     17108,
+     "cancel button clicks in the app, including people who were saved or changed their mind",
+     15800,
+     "Effective cancellations: subscription ended, net of reversals within 24 hours, reconciled to the billing ledger."
+    ],
+    [
+     "Finance",
+     15760,
+     "billing ledger, counted when the final charge is reversed",
+     15800,
+     "Effective cancellations: subscription ended, net of reversals within 24 hours, reconciled to the billing ledger."
+    ],
+    [
+     "Customer care",
+     12851,
+     "cancellations that came through a support contact",
+     15800,
+     "Effective cancellations: subscription ended, net of reversals within 24 hours, reconciled to the billing ledger."
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "team_cancels_care": {
+   "label": "Care's cancel count",
+   "sql": "SELECT team, count, definition, governed_count, governed_definition FROM gold_team_cancel_counts",
+   "tables": [
+    "gold_team_cancel_counts"
+   ],
+   "owner_system": "Support cases",
+   "columns": [
+    "team",
+    "count",
+    "definition",
+    "governed_count",
+    "governed_definition"
+   ],
+   "rows": [
+    [
+     "Product analytics",
+     17108,
+     "cancel button clicks in the app, including people who were saved or changed their mind",
+     15800,
+     "Effective cancellations: subscription ended, net of reversals within 24 hours, reconciled to the billing ledger."
+    ],
+    [
+     "Finance",
+     15760,
+     "billing ledger, counted when the final charge is reversed",
+     15800,
+     "Effective cancellations: subscription ended, net of reversals within 24 hours, reconciled to the billing ledger."
+    ],
+    [
+     "Customer care",
+     12851,
+     "cancellations that came through a support contact",
+     15800,
+     "Effective cancellations: subscription ended, net of reversals within 24 hours, reconciled to the billing ledger."
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "cancels_governed": {
+   "label": "Sports cancellations, governed definition",
+   "sql": "SELECT MEASURE(cancels) AS cancels FROM mv_streamco_metrics WHERE day = DATE'2027-02-15' AND tier = 'Sports'",
+   "tables": [
+    "mv_streamco_metrics"
+   ],
+   "owner_system": "Unity Catalog metric view",
+   "columns": [
+    "cancels"
+   ],
+   "rows": [
+    [
+     15800
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00",
+   "lineage": {
+    "basis": "Unity Catalog lineage (system.access.table_lineage)",
+    "url": "https://<workspace-host>/explore/data/cindy_wu_catalog/streamco/mv_streamco_metrics?o=<workspace-id>&activeTab=lineage",
+    "hops": [
+     {
+      "layer": "Sources",
+      "tables": [
+       "MySQL",
+       "PostgreSQL",
+       "Salesforce Service Cloud",
+       "Payment processor API",
+       "Event stream"
+      ],
+      "basis": "pipeline definition (Auto Loader over the landing volume)"
+     },
+     {
+      "layer": "Bronze",
+      "tables": [
+       "bronze_mysql_accounts",
+       "bronze_mysql_subscriptions",
+       "bronze_pg_billing_attempts",
+       "bronze_processor_events",
+       "bronze_session_events",
+       "bronze_sfdc_support_cases"
+      ],
+      "basis": "Unity Catalog lineage"
+     },
+     {
+      "layer": "Silver",
+      "tables": [
+       "silver_accounts",
+       "silver_billing_attempts",
+       "silver_processor_events",
+       "silver_sessions",
+       "silver_subscription_events",
+       "silver_support_cases"
+      ],
+      "basis": "Unity Catalog lineage"
+     },
+     {
+      "layer": "Gold",
+      "tables": [
+       "gold_cancel_events",
+       "gold_subscriber_daily"
+      ],
+      "basis": "Unity Catalog lineage"
+     },
+     {
+      "layer": "Metric view",
+      "tables": [
+       "mv_streamco_metrics"
+      ],
+      "basis": "Unity Catalog lineage"
+     }
+    ]
+   }
+  },
+  "recon_sports": {
+   "label": "Reconciliation with the billing ledger",
+   "sql": "SELECT tier, subscriber_live_cancels, ledger_cancels, pct_diff, status FROM gold_reconciliation_daily WHERE day = DATE'2027-02-15' AND tier = 'Sports'",
+   "tables": [
+    "gold_reconciliation_daily"
+   ],
+   "owner_system": "Billing ledger",
+   "columns": [
+    "tier",
+    "subscriber_live_cancels",
+    "ledger_cancels",
+    "pct_diff",
+    "status"
+   ],
+   "rows": [
+    [
+     "Sports",
+     15800,
+     15760,
+     0.002531645569620253,
+     "within_tolerance"
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "peak_viewers": {
+   "label": "Peak concurrent viewers",
+   "sql": "SELECT MAX(viewers) AS peak_viewers FROM (SELECT minute_ts, SUM(concurrent_sessions) AS viewers FROM gold_cdn_region_minute WHERE minute_ts BETWEEN TIMESTAMP'2027-02-14 23:00:00' AND TIMESTAMP'2027-02-15 03:30:00' GROUP BY minute_ts)",
+   "tables": [
+    "gold_cdn_region_minute"
+   ],
+   "owner_system": "Playback telemetry",
+   "columns": [
+    "peak_viewers"
+   ],
+   "rows": [
+    [
+     9603491
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "forecast_peak": {
+   "label": "Forecast peak viewers",
+   "sql": "SELECT MAX(viewers) AS forecast_peak FROM (SELECT ts, SUM(yhat) AS viewers FROM forecast_viewers WHERE ts BETWEEN TIMESTAMP'2027-02-14 23:00:00' AND TIMESTAMP'2027-02-15 03:30:00' GROUP BY ts)",
+   "tables": [
+    "forecast_viewers"
+   ],
+   "owner_system": "viewer_forecast model",
+   "columns": [
+    "forecast_peak"
+   ],
+   "rows": [
+    [
+     9599588
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "cancels_pct_over": {
+   "label": "Cancellations vs expected",
+   "sql": "SELECT day, tier, actual, yhat, lo, hi FROM gold_cancel_expected WHERE day = DATE'2027-02-15' AND tier = 'Sports'",
+   "tables": [
+    "gold_cancel_expected"
+   ],
+   "owner_system": "Unity Catalog metric view",
+   "columns": [
+    "day",
+    "tier",
+    "actual",
+    "yhat",
+    "lo",
+    "hi"
+   ],
+   "rows": [
+    [
+     "2027-02-15",
+     "Sports",
+     15800,
+     8977.166666666666,
+     8327.297545227588,
+     9627.035788105744
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "subs_at_risk": {
+   "label": "Subscribers at risk",
+   "sql": "SELECT model_name, version, auc, n_scored, n_at_risk, projected_cancels_30d, top_drivers FROM churn_model_card ORDER BY version DESC LIMIT 1",
+   "tables": [
+    "churn_model_card",
+    "churn_scores"
+   ],
+   "owner_system": "churn_propensity model",
+   "columns": [
+    "model_name",
+    "version",
+    "auc",
+    "n_scored",
+    "n_at_risk",
+    "projected_cancels_30d",
+    "top_drivers"
+   ],
+   "rows": [
+    [
+     "cindy_wu_catalog.streamco.churn_propensity",
+     "1",
+     0.8033373249450113,
+     299624,
+     29963,
+     6696.375422248191,
+     [
+      "Days since last watched",
+      "Worst buffering in one session",
+      "Watching less",
+      "Low viewing hours",
+      "Failed payment, never retried"
+     ]
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "churn_model_auc": {
+   "label": "Churn model accuracy (AUC)",
+   "sql": "SELECT model_name, version, auc, n_scored, n_at_risk, projected_cancels_30d, top_drivers FROM churn_model_card ORDER BY version DESC LIMIT 1",
+   "tables": [
+    "churn_model_card"
+   ],
+   "owner_system": "churn_propensity model",
+   "columns": [
+    "model_name",
+    "version",
+    "auc",
+    "n_scored",
+    "n_at_risk",
+    "projected_cancels_30d",
+    "top_drivers"
+   ],
+   "rows": [
+    [
+     "cindy_wu_catalog.streamco.churn_propensity",
+     "1",
+     0.8033373249450113,
+     299624,
+     29963,
+     6696.375422248191,
+     [
+      "Days since last watched",
+      "Worst buffering in one session",
+      "Watching less",
+      "Low viewing hours",
+      "Failed payment, never retried"
+     ]
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "revenue_at_risk": {
+   "label": "Revenue at risk if no action",
+   "sql": "SELECT model_name, version, auc, n_scored, n_at_risk, projected_cancels_30d, top_drivers FROM churn_model_card ORDER BY version DESC LIMIT 1",
+   "tables": [
+    "churn_model_card"
+   ],
+   "owner_system": "churn_propensity model",
+   "columns": [
+    "model_name",
+    "version",
+    "auc",
+    "n_scored",
+    "n_at_risk",
+    "projected_cancels_30d",
+    "top_drivers"
+   ],
+   "rows": [
+    [
+     "cindy_wu_catalog.streamco.churn_propensity",
+     "1",
+     0.8033373249450113,
+     299624,
+     29963,
+     6696.375422248191,
+     [
+      "Days since last watched",
+      "Worst buffering in one session",
+      "Watching less",
+      "Low viewing hours",
+      "Failed payment, never retried"
+     ]
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "plan_saved_total": {
+   "label": "Subscribers the plan saves",
+   "sql": "SELECT card_id, title, offer, n_subscribers, expected_cancels, save_rate, saved_point, saved_lo, saved_hi, cost_usd, revenue_protected_usd FROM save_plan",
+   "tables": [
+    "save_plan"
+   ],
+   "owner_system": "Save plan",
+   "columns": [
+    "card_id",
+    "title",
+    "offer",
+    "n_subscribers",
+    "expected_cancels",
+    "save_rate",
+    "saved_point",
+    "saved_lo",
+    "saved_hi",
+    "cost_usd",
+    "revenue_protected_usd"
+   ],
+   "rows": [
+    [
+     "payment",
+     "Fix failed payments",
+     "Retry the failed payment at no charge, so the account stays active",
+     4556,
+     1247.2996386961347,
+     0.4999890224004844,
+     623.6361269921578,
+     406.8104461174509,
+     840.8802933594828,
+     1822.4,
+     89728.76595163166
+    ],
+    [
+     "playback",
+     "Make good for buffering",
+     "One month of service credit and a replay of the moments they missed",
+     13165,
+     3216.786782229499,
+     0.24995321002954352,
+     804.0461821988694,
+     459.1228329483148,
+     1144.100954836738,
+     39462.0875,
+     115686.16469477332
+    ],
+    [
+     "onboarding",
+     "Welcome event sign-ups",
+     "A welcome message with what to watch next",
+     10548,
+     1921.0676015407148,
+     0.3499786641674012,
+     672.3326729624928,
+     417.38787439149263,
+     926.6553827758158,
+     527.4,
+     96735.22498584347
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "plan_cost": {
+   "label": "What the plan costs",
+   "sql": "SELECT card_id, title, offer, n_subscribers, expected_cancels, save_rate, saved_point, saved_lo, saved_hi, cost_usd, revenue_protected_usd FROM save_plan",
+   "tables": [
+    "save_plan"
+   ],
+   "owner_system": "Save plan",
+   "columns": [
+    "card_id",
+    "title",
+    "offer",
+    "n_subscribers",
+    "expected_cancels",
+    "save_rate",
+    "saved_point",
+    "saved_lo",
+    "saved_hi",
+    "cost_usd",
+    "revenue_protected_usd"
+   ],
+   "rows": [
+    [
+     "payment",
+     "Fix failed payments",
+     "Retry the failed payment at no charge, so the account stays active",
+     4556,
+     1247.2996386961347,
+     0.4999890224004844,
+     623.6361269921578,
+     406.8104461174509,
+     840.8802933594828,
+     1822.4,
+     89728.76595163166
+    ],
+    [
+     "playback",
+     "Make good for buffering",
+     "One month of service credit and a replay of the moments they missed",
+     13165,
+     3216.786782229499,
+     0.24995321002954352,
+     804.0461821988694,
+     459.1228329483148,
+     1144.100954836738,
+     39462.0875,
+     115686.16469477332
+    ],
+    [
+     "onboarding",
+     "Welcome event sign-ups",
+     "A welcome message with what to watch next",
+     10548,
+     1921.0676015407148,
+     0.3499786641674012,
+     672.3326729624928,
+     417.38787439149263,
+     926.6553827758158,
+     527.4,
+     96735.22498584347
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "plan_revenue_protected": {
+   "label": "Revenue the plan protects",
+   "sql": "SELECT card_id, title, offer, n_subscribers, expected_cancels, save_rate, saved_point, saved_lo, saved_hi, cost_usd, revenue_protected_usd FROM save_plan",
+   "tables": [
+    "save_plan"
+   ],
+   "owner_system": "Save plan",
+   "columns": [
+    "card_id",
+    "title",
+    "offer",
+    "n_subscribers",
+    "expected_cancels",
+    "save_rate",
+    "saved_point",
+    "saved_lo",
+    "saved_hi",
+    "cost_usd",
+    "revenue_protected_usd"
+   ],
+   "rows": [
+    [
+     "payment",
+     "Fix failed payments",
+     "Retry the failed payment at no charge, so the account stays active",
+     4556,
+     1247.2996386961347,
+     0.4999890224004844,
+     623.6361269921578,
+     406.8104461174509,
+     840.8802933594828,
+     1822.4,
+     89728.76595163166
+    ],
+    [
+     "playback",
+     "Make good for buffering",
+     "One month of service credit and a replay of the moments they missed",
+     13165,
+     3216.786782229499,
+     0.24995321002954352,
+     804.0461821988694,
+     459.1228329483148,
+     1144.100954836738,
+     39462.0875,
+     115686.16469477332
+    ],
+    [
+     "onboarding",
+     "Welcome event sign-ups",
+     "A welcome message with what to watch next",
+     10548,
+     1921.0676015407148,
+     0.3499786641674012,
+     672.3326729624928,
+     417.38787439149263,
+     926.6553827758158,
+     527.4,
+     96735.22498584347
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "hot_cell_utilization": {
+   "label": "Forecast utilization at the halftime peak",
+   "sql": "SELECT metro, cdn, util_at_peak, flagged FROM forecast_flags ORDER BY util_at_peak DESC",
+   "tables": [
+    "forecast_flags"
+   ],
+   "owner_system": "viewer_forecast model",
+   "columns": [
+    "metro",
+    "cdn",
+    "util_at_peak",
+    "flagged"
+   ],
+   "rows": [
+    [
+     "DFW",
+     "CDN-C",
+     0.968,
+     true
+    ],
+    [
+     "DFW",
+     "CDN-B",
+     0.8012,
+     false
+    ],
+    [
+     "HOU",
+     "CDN-C",
+     0.7904,
+     false
+    ],
+    [
+     "PHL",
+     "CDN-B",
+     0.787,
+     false
+    ],
+    [
+     "DEN",
+     "CDN-G",
+     0.7834,
+     false
+    ],
+    [
+     "MSP",
+     "CDN-A",
+     0.7791,
+     false
+    ],
+    [
+     "LAX",
+     "CDN-D",
+     0.777,
+     false
+    ],
+    [
+     "SEA",
+     "CDN-F",
+     0.7736,
+     false
+    ],
+    [
+     "SFO",
+     "CDN-G",
+     0.766,
+     false
+    ],
+    [
+     "LAX",
+     "CDN-A",
+     0.7654,
+     false
+    ],
+    [
+     "DEN",
+     "CDN-B",
+     0.759,
+     false
+    ],
+    [
+     "SEA",
+     "CDN-A",
+     0.755,
+     false
+    ],
+    [
+     "ATL",
+     "CDN-C",
+     0.7549,
+     false
+    ],
+    [
+     "BOS",
+     "CDN-B",
+     0.7415,
+     false
+    ],
+    [
+     "BOS",
+     "CDN-E",
+     0.7308,
+     false
+    ],
+    [
+     "LAX",
+     "CDN-G",
+     0.7021,
+     false
+    ],
+    [
+     "NYC",
+     "CDN-E",
+     0.6998,
+     false
+    ],
+    [
+     "CHI",
+     "CDN-D",
+     0.6947,
+     false
+    ],
+    [
+     "WAS",
+     "CDN-B",
+     0.6914,
+     false
+    ],
+    [
+     "DFW",
+     "CDN-A",
+     0.6907,
+     false
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "affected_sessions": {
+   "label": "Sessions in the failing cell",
+   "sql": "SELECT alert_id, detected_ts, cdn, metro, device_family, app_version, observed, baseline, persistence_min, affected_sessions, resolved_ts FROM gold_anomaly_alerts ORDER BY detected_ts LIMIT 1",
+   "tables": [
+    "gold_anomaly_alerts"
+   ],
+   "owner_system": "Playback telemetry",
+   "columns": [
+    "alert_id",
+    "detected_ts",
+    "cdn",
+    "metro",
+    "device_family",
+    "app_version",
+    "observed",
+    "baseline",
+    "persistence_min",
+    "affected_sessions",
+    "resolved_ts"
+   ],
+   "rows": [
+    [
+     "ALR-20270214-DFW-C-ROKU720",
+     "2027-02-15T01:19:00.000Z",
+     "CDN-C",
+     "DFW",
+     "Roku",
+     "7.2.0",
+     0.10550875556387683,
+     0.009978043081624439,
+     3,
+     208498,
+     "2027-02-15T01:36:00.000Z"
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "personalization_run": {
+   "label": "Personalized messages generated",
+   "sql": "SELECT n_messages, cost_usd, model, run_at FROM personalization_run ORDER BY run_at DESC LIMIT 1",
+   "tables": [
+    "personalization_run"
+   ],
+   "owner_system": "AI Functions",
+   "columns": [
+    "n_messages",
+    "cost_usd",
+    "model",
+    "run_at"
+   ],
+   "rows": [
+    [
+     28269,
+     57.58,
+     "system.ai.gpt-5-6-sol",
+     "2026-11-09T21:08:46.356Z"
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "cancel_driver_playback": {
+   "label": "Cancel driver: playback",
+   "sql": "SELECT driver, n_cancels, pct, evidence_type, confidence FROM fn_cancel_drivers(DATE'2027-02-15', 'Sports') WHERE driver IS NOT NULL AND driver <> 'baseline'",
+   "tables": [
+    "fn_cancel_drivers",
+    "gold_cancel_decomposition"
+   ],
+   "owner_system": "Unity Catalog function",
+   "columns": [
+    "driver",
+    "n_cancels",
+    "pct",
+    "evidence_type",
+    "confidence"
+   ],
+   "rows": [
+    [
+     "playback",
+     2302,
+     0.3373882456397479,
+     "inferred",
+     "high"
+    ],
+    [
+     "payment",
+     1999,
+     0.2929796277297377,
+     "observed",
+     "high"
+    ],
+    [
+     "event_only",
+     2064,
+     0.30250622893155504,
+     "expected",
+     "high"
+    ],
+    [
+     "unexplained",
+     458,
+     0.06712589769895941,
+     "unexplained",
+     "low"
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "cancel_driver_payment": {
+   "label": "Cancel driver: payment",
+   "sql": "SELECT driver, n_cancels, pct, evidence_type, confidence FROM fn_cancel_drivers(DATE'2027-02-15', 'Sports') WHERE driver IS NOT NULL AND driver <> 'baseline'",
+   "tables": [
+    "fn_cancel_drivers",
+    "gold_cancel_decomposition"
+   ],
+   "owner_system": "Unity Catalog function",
+   "columns": [
+    "driver",
+    "n_cancels",
+    "pct",
+    "evidence_type",
+    "confidence"
+   ],
+   "rows": [
+    [
+     "playback",
+     2302,
+     0.3373882456397479,
+     "inferred",
+     "high"
+    ],
+    [
+     "payment",
+     1999,
+     0.2929796277297377,
+     "observed",
+     "high"
+    ],
+    [
+     "event_only",
+     2064,
+     0.30250622893155504,
+     "expected",
+     "high"
+    ],
+    [
+     "unexplained",
+     458,
+     0.06712589769895941,
+     "unexplained",
+     "low"
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "cancel_driver_event_only": {
+   "label": "Cancel driver: event only",
+   "sql": "SELECT driver, n_cancels, pct, evidence_type, confidence FROM fn_cancel_drivers(DATE'2027-02-15', 'Sports') WHERE driver IS NOT NULL AND driver <> 'baseline'",
+   "tables": [
+    "fn_cancel_drivers",
+    "gold_cancel_decomposition"
+   ],
+   "owner_system": "Unity Catalog function",
+   "columns": [
+    "driver",
+    "n_cancels",
+    "pct",
+    "evidence_type",
+    "confidence"
+   ],
+   "rows": [
+    [
+     "playback",
+     2302,
+     0.3373882456397479,
+     "inferred",
+     "high"
+    ],
+    [
+     "payment",
+     1999,
+     0.2929796277297377,
+     "observed",
+     "high"
+    ],
+    [
+     "event_only",
+     2064,
+     0.30250622893155504,
+     "expected",
+     "high"
+    ],
+    [
+     "unexplained",
+     458,
+     0.06712589769895941,
+     "unexplained",
+     "low"
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "cancel_driver_unexplained": {
+   "label": "Cancel driver: unexplained",
+   "sql": "SELECT driver, n_cancels, pct, evidence_type, confidence FROM fn_cancel_drivers(DATE'2027-02-15', 'Sports') WHERE driver IS NOT NULL AND driver <> 'baseline'",
+   "tables": [
+    "fn_cancel_drivers",
+    "gold_cancel_decomposition"
+   ],
+   "owner_system": "Unity Catalog function",
+   "columns": [
+    "driver",
+    "n_cancels",
+    "pct",
+    "evidence_type",
+    "confidence"
+   ],
+   "rows": [
+    [
+     "playback",
+     2302,
+     0.3373882456397479,
+     "inferred",
+     "high"
+    ],
+    [
+     "payment",
+     1999,
+     0.2929796277297377,
+     "observed",
+     "high"
+    ],
+    [
+     "event_only",
+     2064,
+     0.30250622893155504,
+     "expected",
+     "high"
+    ],
+    [
+     "unexplained",
+     458,
+     0.06712589769895941,
+     "unexplained",
+     "low"
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "subscriber_entity": {
+   "label": "One subscriber ID across the five systems",
+   "sql": "SELECT 'Subscriptions' AS system, count(DISTINCT x.subscriber_id) AS subscriber_ids, count(DISTINCT x.subscriber_id) - count(DISTINCT a.subscriber_id) AS unmatched_ids FROM silver_subscription_events x LEFT JOIN silver_accounts a ON a.subscriber_id = x.subscriber_id UNION ALL SELECT 'Billing' AS system, count(DISTINCT x.subscriber_id) AS subscriber_ids, count(DISTINCT x.subscriber_id) - count(DISTINCT a.subscriber_id) AS unmatched_ids FROM silver_billing_attempts x LEFT JOIN silver_accounts a ON a.subscriber_id = x.subscriber_id UNION ALL SELECT 'Support' AS system, count(DISTINCT x.subscriber_id) AS subscriber_ids, count(DISTINCT x.subscriber_id) - count(DISTINCT a.subscriber_id) AS unmatched_ids FROM silver_support_cases x LEFT JOIN silver_accounts a ON a.subscriber_id = x.subscriber_id UNION ALL SELECT 'Payments' AS system, count(DISTINCT x.subscriber_id) AS subscriber_ids, count(DISTINCT x.subscriber_id) - count(DISTINCT a.subscriber_id) AS unmatched_ids FROM silver_processor_events x LEFT JOIN silver_accounts a ON a.subscriber_id = x.subscriber_id UNION ALL SELECT 'Telemetry' AS system, count(DISTINCT x.subscriber_id) AS subscriber_ids, count(DISTINCT x.subscriber_id) - count(DISTINCT a.subscriber_id) AS unmatched_ids FROM silver_sessions x LEFT JOIN silver_accounts a ON a.subscriber_id = x.subscriber_id",
+   "tables": [
+    "silver_accounts",
+    "silver_subscription_events",
+    "silver_billing_attempts",
+    "silver_support_cases",
+    "silver_processor_events",
+    "silver_sessions"
+   ],
+   "owner_system": "Unity Catalog",
+   "columns": [
+    "system",
+    "subscriber_ids",
+    "unmatched_ids"
+   ],
+   "rows": [
+    [
+     "Subscriptions",
+     551867,
+     0
+    ],
+    [
+     "Billing",
+     470786,
+     0
+    ],
+    [
+     "Support",
+     32548,
+     0
+    ],
+    [
+     "Payments",
+     470786,
+     0
+    ],
+    [
+     "Telemetry",
+     263965,
+     0
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "data_quality": {
+   "label": "Data quality rules, latest full pipeline runs",
+   "sql": "WITH ev AS (SELECT * FROM event_log(TABLE(cindy_wu_catalog.streamco.silver_accounts)) UNION ALL SELECT * FROM event_log(TABLE(cindy_wu_catalog.streamco.gold_cancel_events))), upd AS (SELECT origin.pipeline_name AS pipeline, max_by(origin.update_id, timestamp) AS update_id, max(timestamp) AS run_ts FROM ev WHERE event_type = 'create_update' AND details:create_update.full_refresh::boolean GROUP BY 1), cur AS (SELECT ev.*, upd.pipeline, upd.run_ts FROM ev JOIN upd ON ev.origin.update_id = upd.update_id), res AS (SELECT pipeline, explode(from_json(details:flow_progress.data_quality.expectations, 'ARRAY<STRUCT<name: STRING, dataset: STRING, passed_records: BIGINT, failed_records: BIGINT>>')) AS e FROM cur WHERE event_type = 'flow_progress' AND details:flow_progress.status = 'COMPLETED'), act AS (SELECT DISTINCT a.name, a.action FROM (SELECT explode(from_json(details:dataset_definition.expectations, 'ARRAY<STRUCT<name: STRING, action: STRING>>')) AS a FROM cur WHERE event_type = 'dataset_definition')) SELECT u.pipeline, res.e.name AS rule, regexp_replace(res.e.dataset, '^.*[.]', '') AS dataset, act.action, res.e.passed_records AS passed, res.e.failed_records AS failed, u.run_ts FROM upd u LEFT JOIN res ON res.pipeline = u.pipeline LEFT JOIN act ON act.name = res.e.name ORDER BY u.pipeline DESC, failed DESC, rule",
+   "tables": [
+    "event_log(streamco-data-stream)",
+    "event_log(streamco-data-batch)"
+   ],
+   "owner_system": "Lakeflow pipeline event log",
+   "columns": [
+    "pipeline",
+    "rule",
+    "dataset",
+    "action",
+    "passed",
+    "failed",
+    "run_ts"
+   ],
+   "rows": [
+    [
+     "streamco-data-stream",
+     "app_version_present",
+     "cdn_rows_checked",
+     "ALLOW",
+     1896962,
+     19090,
+     "2026-11-09T04:25:42.801Z"
+    ],
+    [
+     "streamco-data-stream",
+     "amount_non_negative",
+     "silver_billing_attempts",
+     "DROP",
+     482831,
+     0,
+     "2026-11-09T04:25:42.801Z"
+    ],
+    [
+     "streamco-data-stream",
+     "cdn_and_metro_not_null",
+     "cdn_rows_checked",
+     "DROP",
+     1916052,
+     0,
+     "2026-11-09T04:25:42.801Z"
+    ],
+    [
+     "streamco-data-stream",
+     "event_type_known",
+     "silver_subscription_events",
+     "DROP",
+     788865,
+     0,
+     "2026-11-09T04:25:42.801Z"
+    ],
+    [
+     "streamco-data-stream",
+     "ratios_between_0_and_1",
+     "cdn_rows_checked",
+     "DROP",
+     1916052,
+     0,
+     "2026-11-09T04:25:42.801Z"
+    ],
+    [
+     "streamco-data-stream",
+     "subscriber_present",
+     "silver_accounts",
+     "DROP",
+     4000000,
+     0,
+     "2026-11-09T04:25:42.801Z"
+    ],
+    [
+     "streamco-data-batch",
+     null,
+     null,
+     null,
+     null,
+     null,
+     "2026-11-09T04:28:29.229Z"
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "model_monitoring": {
+   "label": "Churn model drift: training vs the post-game snapshot",
+   "sql": "SELECT label, feature, importance_rank, is_top, psi, baseline_mean, current_mean, drift FROM churn_monitoring_features ORDER BY is_top DESC, psi DESC",
+   "tables": [
+    "churn_monitoring",
+    "churn_monitoring_features"
+   ],
+   "owner_system": "notebooks/08_monitor",
+   "columns": [
+    "label",
+    "feature",
+    "importance_rank",
+    "is_top",
+    "psi",
+    "baseline_mean",
+    "current_mean",
+    "drift"
+   ],
+   "rows": [
+    [
+     "Days since last watched",
+     "days_since_last_session",
+     1,
+     true,
+     1.2799178236630744,
+     3.820578333333333,
+     1.0899694283501988,
+     "high"
+    ],
+    [
+     "Low viewing hours",
+     "hours_30d",
+     4,
+     true,
+     0.48752887627131136,
+     15.57449335833334,
+     11.679937321442871,
+     "high"
+    ],
+    [
+     "Worst buffering in one session",
+     "max_session_rebuffer_min",
+     2,
+     true,
+     0.009753372918967097,
+     2.7720876916666666,
+     2.9120499692948503,
+     "low"
+    ],
+    [
+     "Watching less",
+     "engagement_trend",
+     3,
+     true,
+     3.990970098115447e-05,
+     0.00013580591666666647,
+     -0.0003080324006087633,
+     "low"
+    ],
+    [
+     "Failed payment, never retried",
+     "decline_no_retry",
+     5,
+     true,
+     2.922698651218242e-06,
+     0.04033916666666667,
+     0.040003471017007984,
+     "low"
+    ],
+    [
+     "Plan price",
+     "plan_price",
+     14,
+     false,
+     0.6715824800474697,
+     12.244837500000008,
+     11.924077376979154,
+     "high"
+    ],
+    [
+     "New subscriber",
+     "tenure_days",
+     7,
+     false,
+     0.5293978224926063,
+     487.40370916666666,
+     322.9754559047339,
+     "high"
+    ],
+    [
+     "Few active days",
+     "active_days_30d",
+     12,
+     false,
+     0.5116679175037555,
+     17.657775833333332,
+     12.313529623795157,
+     "high"
+    ],
+    [
+     "How they signed up",
+     "signup_source",
+     13,
+     false,
+     0.1898342570705734,
+     null,
+     null,
+     "moderate"
+    ],
+    [
+     "Joined for the event",
+     "event_only_signup",
+     11,
+     false,
+     0.18525744881611195,
+     0.141865,
+     0.3194136651269591,
+     "moderate"
+    ],
+    [
+     "Not on a bundle",
+     "is_bundle",
+     8,
+     false,
+     0.014345738075983754,
+     0.07965416666666666,
+     0.05036312177929672,
+     "low"
+    ],
+    [
+     "Buffering minutes",
+     "rebuffer_min_30d",
+     6,
+     false,
+     0.01221531725816864,
+     5.8227946166666635,
+     6.18302095292767,
+     "low"
+    ],
+    [
+     "Streams that failed to start",
+     "failed_starts_30d",
+     15,
+     false,
+     0.003083367916671423,
+     0.9921316666666666,
+     1.0640335887645849,
+     "low"
+    ],
+    [
+     "Card declines",
+     "declines_30d",
+     16,
+     false,
+     0.0013610499031296304,
+     0.10789583333333333,
+     0.12051104050409847,
+     "low"
+    ],
+    [
+     "Contacted support",
+     "support_contacts_30d",
+     9,
+     false,
+     8.314783913591067e-06,
+     0.27902666666666665,
+     0.2801511227405014,
+     "low"
+    ],
+    [
+     "Paused recently",
+     "pauses_90d",
+     10,
+     false,
+     5.151373904004209e-06,
+     0.23406166666666667,
+     0.23506795183296397,
+     "low"
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  },
+  "save_rate_sources": {
+   "label": "The past holdout tests behind each save rate",
+   "sql": "SELECT card_id, test_id, run_date, n_treated, n_holdout, treated_rate, holdout_rate, lift, card_save_rate_from_tests, plan_save_rate FROM churn_monitoring_outcomes ORDER BY card_id, run_date",
+   "tables": [
+    "churn_monitoring_outcomes",
+    "offer_holdout_results"
+   ],
+   "owner_system": "Offer holdout tests",
+   "columns": [
+    "card_id",
+    "test_id",
+    "run_date",
+    "n_treated",
+    "n_holdout",
+    "treated_rate",
+    "holdout_rate",
+    "lift",
+    "card_save_rate_from_tests",
+    "plan_save_rate"
+   ],
+   "rows": [
+    [
+     "onboarding",
+     "HT-ONBO-PRE-1",
+     "2026-02-23",
+     3355,
+     3901,
+     0.24530551415797316,
+     0.02999230966418867,
+     0.2153132044937845,
+     0.3499786641674012,
+     0.3499786641674012
+    ],
+    [
+     "onboarding",
+     "HT-ONBO-PRE-5",
+     "2026-05-06",
+     5844,
+     3600,
+     0.5147159479808351,
+     0.03,
+     0.48471594798083506,
+     0.3499786641674012,
+     0.3499786641674012
+    ],
+    [
+     "onboarding",
+     "HT-ONBO-PRE-2",
+     "2026-05-14",
+     4215,
+     3040,
+     0.3594306049822064,
+     0.02993421052631579,
+     0.32949639445589063,
+     0.3499786641674012,
+     0.3499786641674012
+    ],
+    [
+     "onboarding",
+     "HT-ONBO-PRE-3",
+     "2026-06-22",
+     3458,
+     3697,
+     0.4456333140543667,
+     0.030024344062753585,
+     0.4156089699916131,
+     0.3499786641674012,
+     0.3499786641674012
+    ],
+    [
+     "onboarding",
+     "HT-ONBO-PRE-4",
+     "2026-06-24",
+     4659,
+     3164,
+     0.40051513200257566,
+     0.03002528445006321,
+     0.37048984755251246,
+     0.3499786641674012,
+     0.3499786641674012
+    ],
+    [
+     "onboarding",
+     "HT-ONBO-PRE-6",
+     "2026-06-28",
+     3571,
+     4207,
+     0.31419770372444694,
+     0.029950083194675542,
+     0.28424762052977137,
+     0.3499786641674012,
+     0.3499786641674012
+    ],
+    [
+     "payment",
+     "HT-REPR-PRE-2",
+     "2026-03-08",
+     4624,
+     3764,
+     0.35423875432525953,
+     0.03002125398512221,
+     0.3242175003401373,
+     0.4999890224004844,
+     0.4999890224004844
+    ],
+    [
+     "payment",
+     "HT-REPR-PRE-4",
+     "2026-04-03",
+     5536,
+     4305,
+     0.6157875722543352,
+     0.029965156794425088,
+     0.5858224154599101,
+     0.4999890224004844,
+     0.4999890224004844
+    ],
+    [
+     "payment",
+     "HT-REPR-PRE-1",
+     "2026-04-30",
+     4571,
+     5625,
+     0.5567709472763072,
+     0.030044444444444443,
+     0.5267265028318627,
+     0.4999890224004844,
+     0.4999890224004844
+    ],
+    [
+     "payment",
+     "HT-REPR-PRE-6",
+     "2026-05-23",
+     5639,
+     5718,
+     0.7057989005142756,
+     0.030080447708989155,
+     0.6757184528052864,
+     0.4999890224004844,
+     0.4999890224004844
+    ],
+    [
+     "payment",
+     "HT-REPR-PRE-3",
+     "2026-06-20",
+     3460,
+     4548,
+     0.44421965317919077,
+     0.02990325417766051,
+     0.4143163990015303,
+     0.4999890224004844,
+     0.4999890224004844
+    ],
+    [
+     "payment",
+     "HT-REPR-PRE-5",
+     "2026-08-15",
+     5141,
+     5220,
+     0.5032094923166699,
+     0.03007662835249042,
+     0.4731328639641795,
+     0.4999890224004844,
+     0.4999890224004844
+    ],
+    [
+     "playback",
+     "HT-CRED-PRE-6",
+     "2026-05-06",
+     4057,
+     4093,
+     0.2965245255114617,
+     0.03005130710969949,
+     0.2664732184017622,
+     0.24995321002954352,
+     0.24995321002954352
+    ],
+    [
+     "playback",
+     "HT-CRED-PRE-3",
+     "2026-05-09",
+     3444,
+     5400,
+     0.227061556329849,
+     0.03,
+     0.197061556329849,
+     0.24995321002954352,
+     0.24995321002954352
+    ],
+    [
+     "playback",
+     "HT-CRED-PRE-5",
+     "2026-05-13",
+     4321,
+     4854,
+     0.33279333487618606,
+     0.030078285949732178,
+     0.3027150489264539,
+     0.24995321002954352,
+     0.24995321002954352
+    ],
+    [
+     "playback",
+     "HT-CRED-PRE-1",
+     "2026-06-12",
+     3526,
+     3296,
+     0.3885422575155984,
+     0.030036407766990292,
+     0.3585058497486081,
+     0.24995321002954352,
+     0.24995321002954352
+    ],
+    [
+     "playback",
+     "HT-CRED-PRE-2",
+     "2026-06-24",
+     4451,
+     5806,
+     0.17142215232532015,
+     0.029968997588701342,
+     0.14145315473661882,
+     0.24995321002954352,
+     0.24995321002954352
+    ],
+    [
+     "playback",
+     "HT-CRED-PRE-4",
+     "2026-12-11",
+     4563,
+     4814,
+     0.2634231865001096,
+     0.029912754466140425,
+     0.23351043203396918,
+     0.24995321002954352,
+     0.24995321002954352
+    ]
+   ],
+   "ran_at": "2026-11-13T22:55:36+00:00"
+  }
+ },
+ "illustrative_parts": [],
+ "followups_source": "Genie Agent",
+ "ask_run_source": "live run, narrated by agent"
+}

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StreamCo Command Center</title>
+<link rel="stylesheet" href="colors_and_type.css">
+<style>
+  html,body{margin:0;background:#0e1a1f;}
+  deck-stage:not(:defined){visibility:hidden}
+
+  /* ---- slide base ---- */
+  section{font-family:var(--font-sans);color:var(--db-ink);background:var(--db-oat-light);overflow:hidden;}
+  .slide{position:absolute;inset:0;padding:72px 88px;display:flex;flex-direction:column;}
+  .slide.dark{background:var(--db-navy);color:#F4F1ED;}
+  .slide.ink{background:var(--db-ink-deep);color:#F4F1ED;}
+  .slide.white{background:#fff;}
+  .slide.coral{background:var(--db-coral);color:#fff;}
+
+  /* ---- shared chrome ---- */
+  .eyebrow{font-size:14px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--db-lava);}
+  .dark .eyebrow,.ink .eyebrow,.coral .eyebrow{color:#FFC9BF;}
+  .title{font-size:56px;font-weight:700;line-height:1.04;letter-spacing:-.02em;color:var(--db-navy);}
+  .dark .title,.ink .title,.coral .title{color:#fff;}
+  .title .em{color:var(--db-lava);font-style:italic;}
+  .dark .title .em,.ink .title .em{color:var(--db-coral);}
+  .subtitle{font-size:22px;font-weight:400;line-height:1.4;color:var(--db-ink-soft);}
+  .dark .subtitle,.ink .subtitle{color:#B9C6CB;}
+  .body{font-size:18px;line-height:1.6;color:var(--db-ink);}
+  .footer{position:absolute;left:88px;right:88px;bottom:40px;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--db-ink-muted);}
+  .dark .footer,.ink .footer{color:#7E9098;}
+  .accent-bar{width:64px;height:6px;background:var(--db-lava);border-radius:3px;}
+  .logo-tl{height:30px;width:auto;align-self:flex-start;}
+
+  /* ---- bullets (coral square markers) ---- */
+  ul.bullets{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px;}
+  ul.bullets li{position:relative;padding-left:26px;font-size:18px;line-height:1.45;color:var(--db-ink);}
+  ul.bullets li::before{content:"";position:absolute;left:0;top:9px;width:9px;height:9px;border-radius:2px;background:var(--db-coral);}
+  .dark ul.bullets li,.ink ul.bullets li{color:#D9E1E4;}
+
+  /* ---- numbered agenda / list rows ---- */
+  .rows{display:flex;flex-direction:column;gap:0;max-width:820px;}
+  .rows .r{display:flex;gap:24px;align-items:baseline;padding:20px 0;border-bottom:1px solid var(--db-line);}
+  .rows .r:last-child{border-bottom:0;}
+  .rows .rn{font-family:var(--font-mono);font-size:20px;color:var(--db-coral);width:44px;flex:none;}
+  .rows .rt{font-size:24px;font-weight:500;color:var(--db-navy);}
+  .dark .rows .r,.ink .rows .r{border-color:rgba(255,255,255,.14);}
+  .dark .rows .rt,.ink .rows .rt{color:#fff;}
+
+  /* ---- cards (3-up) ---- */
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:44px;}
+  .card{background:#fff;border-radius:14px;box-shadow:var(--shadow-md);padding:30px;display:flex;flex-direction:column;gap:12px;}
+  .card .pico{width:52px;height:52px;border-radius:12px;background:var(--db-oat-medium);display:flex;align-items:center;justify-content:center;}
+  .card .pico span{width:20px;height:20px;border-radius:5px;background:var(--db-coral);}
+  .card .ct{font-size:24px;font-weight:700;color:var(--db-navy);}
+  .card .cb{font-size:16px;line-height:1.5;color:var(--db-ink-soft);}
+
+  /* ---- stats (big numbers) ---- */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;}
+  .stat{display:flex;flex-direction:column;gap:6px;}
+  .stat .num{font-size:88px;font-weight:700;letter-spacing:-.03em;color:var(--db-lava);line-height:1;}
+  .stat .lab{font-size:18px;color:#B9C6CB;max-width:300px;line-height:1.4;}
+  .slide:not(.dark):not(.ink) .stat .lab{color:var(--db-ink-soft);}
+
+  /* ---- action title (kicker + full-sentence takeaway + coral-tipped rule) ---- */
+  .action-kicker{font-size:14px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--db-lava);}
+  .action-title{font-size:34px;font-weight:700;line-height:1.18;letter-spacing:-.015em;color:var(--db-navy);max-width:1040px;}
+  .action-title .em{color:var(--db-lava);font-style:italic;}
+  .action-rule{height:3px;width:100%;background:var(--db-oat-medium);margin:20px 0 28px;position:relative;}
+  .action-rule::before{content:"";position:absolute;left:0;top:0;height:3px;width:88px;background:var(--db-lava);}
+  .source-line{position:absolute;left:88px;bottom:30px;font-size:12px;font-style:italic;color:var(--db-ink-muted);}
+
+  /* ---- executive summary (numbered takeaways) ---- */
+  .exsum{display:flex;flex-direction:column;gap:0;margin-top:8px;}
+  .exsum .item{display:grid;grid-template-columns:56px 1fr;gap:22px;padding:20px 0;border-bottom:1px solid var(--db-line);align-items:start;}
+  .exsum .item:last-child{border-bottom:0;}
+  .exsum .n{font-family:var(--font-mono);font-size:24px;font-weight:500;color:var(--db-lava);line-height:1.2;}
+  .exsum .h{font-size:21px;font-weight:700;color:var(--db-navy);margin-bottom:3px;}
+  .exsum .d{font-size:16px;line-height:1.45;color:var(--db-ink-soft);}
+
+  /* ---- insight callout (navy "so what" box) ---- */
+  .insight{background:var(--db-navy);color:#F4F1ED;border-radius:12px;padding:24px 26px;display:flex;flex-direction:column;gap:10px;}
+  .insight .ih{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--db-coral);}
+  .insight .it{font-size:20px;font-weight:600;line-height:1.35;}
+
+  /* ---- comparison table (coral header, banded rows, mono numerals) ---- */
+  .dv-table{border-collapse:collapse;width:100%;font-family:var(--font-sans);}
+  .dv-table th{background:var(--db-coral);color:#fff;font-weight:700;text-align:left;padding:14px 20px;font-size:16px;letter-spacing:.01em;}
+  .dv-table th:first-child{border-top-left-radius:8px;}
+  .dv-table th:last-child{border-top-right-radius:8px;}
+  .dv-table td{padding:14px 20px;font-size:17px;color:var(--db-ink);line-height:1.4;vertical-align:top;}
+  .dv-table tbody tr:nth-child(odd){background:#fff;}
+  .dv-table tbody tr:nth-child(even){background:#F3F3F3;}
+  .dv-table tbody tr td:first-child{font-weight:700;color:var(--db-navy);}
+  .dv-table .good{color:var(--db-green-700);font-weight:600;}
+  .dv-table .bad{color:var(--db-maroon);font-weight:600;}
+
+  /* ---- four-step flow (numbered chips + coral arrows) ---- */
+  .stepflow{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:12px;align-items:stretch;}
+  .step{padding:0 22px;display:flex;flex-direction:column;gap:12px;position:relative;}
+  .step .sn{width:44px;height:44px;border-radius:50%;color:#fff;font-family:var(--font-mono);font-size:20px;display:flex;align-items:center;justify-content:center;background:var(--db-navy);}
+  .step:nth-child(2) .sn{background:var(--db-lava);}
+  .step:nth-child(3) .sn{background:var(--db-navy-700);}
+  .step:nth-child(4) .sn{background:var(--db-green);}
+  .step .sh{font-size:19px;font-weight:700;color:var(--db-navy);line-height:1.2;}
+  .step .sd{font-size:16px;line-height:1.45;color:var(--db-ink-soft);}
+  .step:not(:last-child)::after{content:"\2192";position:absolute;right:-9px;top:10px;color:var(--db-coral);font-size:22px;font-weight:700;}
+
+  /* ---- code / endpoint panel (DM Mono) ---- */
+  .code-card{background:var(--db-navy);border-radius:12px;padding:24px 28px;font-family:var(--font-mono);color:#E8EEF0;font-size:16px;line-height:1.75;box-shadow:var(--shadow-md);}
+  .code-card .cmt{color:#7E9098;}
+  .code-card .acc{color:var(--db-coral);}
+  .code-card .kw{color:#9ED6C4;}
+
+</style>
+</head>
+<body>
+<deck-stage width="1280" height="720">
+
+  <section data-pattern="cover" data-label="Cover">
+    <div class="slide dark">
+      <img src="assets/brand/databricks-logo-white.svg" alt="Databricks" class="logo-tl">
+      <div style="display:flex;align-items:center;gap:14px;margin-top:40px;">
+        <div class="accent-bar"></div>
+        <span class="eyebrow">StreamCo Command Center</span>
+      </div>
+      <div style="margin-top:auto;max-width:820px;">
+        <div class="title" style="font-size:64px;">Keep about 2,100 more subscribers after every <span class="em">big</span> event</div>
+        <div class="subtitle" style="margin-top:24px;">$302k revenue protected for $42k, one cancel number every team agrees on, and capacity hot spots flagged before kickoff. Prepared for StreamCo leadership.</div>
+      </div>
+      <img src="assets/brand/illustration-nodal-02.svg" style="position:absolute;right:64px;top:90px;height:300px;opacity:.95;" alt="">
+      <div class="footer"><span>Databricks | Confidential</span><span>November 2026</span></div>
+    </div>
+  </section>
+
+  <section data-pattern="three-card" data-label="Problem">
+    <div class="slide">
+      <span class="eyebrow">The problem, to validate together</span>
+      <div class="title" style="margin-top:14px;font-size:42px;">Three gaps between your data and <span class="em">fast</span> decisions</div>
+      <div class="cards">
+        <div class="card"><div class="pico"><span></span></div><div class="ct">Scattered data, debated numbers</div><div class="cb">MySQL, Postgres and SaaS platforms that aren't connected yet. Product, Finance and Care each count cancels their own way, so decisions take longer than they should.</div></div>
+        <div class="card"><div class="pico"><span></span></div><div class="ct">Planning without forecasts</div><div class="cb">Capacity, staffing and retention are planned from past peaks and spreadsheets. A forecast, a churn score and a way to learn from outcomes would help.</div></div>
+        <div class="card"><div class="pico"><span></span></div><div class="ct">Knowledge that's hard to use</div><div class="cb">Years of policies, support transcripts and customer history could do more. Outreach is one offer for everyone, or manual work that's hard to scale.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section data-pattern="four-step" data-label="Architecture">
+    <div class="slide">
+      <div class="action-kicker">Proposed architecture</div>
+      <div class="action-title" style="margin-top:8px;">Four layers on one governed platform, each <span class="em">built on</span> the one before</div>
+      <div class="action-rule"></div>
+      <div class="stepflow">
+        <div class="step"><div class="sn">1</div><div class="sh">Governed data foundation</div><div class="sd">MySQL, Postgres, Salesforce, payment and viewing data unified around the subscriber in Unity Catalog. Lakeflow checks quality; one Metric View defines every metric.</div></div>
+        <div class="step"><div class="sn">2</div><div class="sh">Predictive ML</div><div class="sd">A viewership forecast for capacity and a churn score for every subscriber, registered in Unity Catalog, monitored for drift and retrained on outcomes.</div></div>
+        <div class="step"><div class="sn">3</div><div class="sh">GenAI</div><div class="sd">An agent explains why, from certified metrics, your policies and support transcripts. Every at-risk subscriber gets a personal message that follows your policy.</div></div>
+        <div class="step"><div class="sn">4</div><div class="sh">Command Center</div><div class="sd">One screen per decision for leaders. Scores and messages are served from Lakebase in milliseconds, and approvals are written back.</div></div>
+      </div>
+      <div class="insight" style="margin-top:auto;">
+        <div class="ih">Governed throughout</div>
+        <div class="it">Unity Catalog lineage, quality rules and governed views that mask personal data and exclude kids. Unity Gateway logs, budgets and guards every AI call.</div>
+      </div>
+    </div>
+  </section>
+
+  <section data-pattern="comparison-table" data-label="What we built">
+    <div class="slide">
+      <div class="action-kicker">What we built</div>
+      <div class="action-title" style="margin-top:8px;">One big night, from raw data to an <span class="em">approved</span> plan</div>
+      <div class="action-rule"></div>
+      <table class="dv-table">
+        <thead><tr><th style="width:22%;">Layer</th><th style="width:40%;">What we built</th><th>What it showed</th></tr></thead>
+        <tbody>
+          <tr><td>Data foundation</td><td>Five source systems unified around the subscriber, with quality rules and one Metric View</td><td>Three team counts became one governed number, within 0.25% of the ledger</td></tr>
+          <tr><td>Predictive ML</td><td>Viewership forecast and churn model, monitored and retrained in Unity Catalog</td><td>Dallas flagged at 97% before kickoff; about 30,000 subscribers at risk found</td></tr>
+          <tr><td>GenAI</td><td>An agent over metrics, policies and transcripts; a personal message per subscriber</td><td>The why in about 90 seconds; 28,269 messages for about $58</td></tr>
+          <tr><td>Command Center</td><td>Four screens; subscriber lookups and approvals in Lakebase; a person approves</td><td>About 2,100 saved: $302k protected for $42k, about 7x</td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:28px;padding-top:16px;border-top:1px solid var(--db-line);">
+        <div><div style="font-size:18px;font-weight:700;color:var(--db-navy);">For the executive sponsor</div><div style="font-size:16px;line-height:1.45;color:var(--db-ink-soft);margin-top:4px;">About $20 per subscriber saved, 7x return on the plan, and the meeting starts from one agreed number.</div></div>
+        <div><div style="font-size:18px;font-weight:700;color:var(--db-navy);">For the domain owners</div><div style="font-size:16px;line-height:1.45;color:var(--db-ink-soft);margin-top:4px;">Retention: save rates of 50%, 25% and 35% by cause. Operations: Dallas flagged before kickoff. Data: 99.7% of rows pass quality rules.</div></div>
+      </div>
+      <div class="source-line">Synthetic demo data. Assumes $11.99 monthly ARPU, 12 months, gross revenue.</div>
+    </div>
+  </section>
+
+  <section data-pattern="four-step" data-label="Next steps">
+    <div class="slide">
+      <div class="action-kicker">Next steps</div>
+      <div class="action-title" style="margin-top:8px;">Prove it on your data in a <span class="em">30-day</span> proof of concept</div>
+      <div class="action-rule"></div>
+      <div class="stepflow">
+        <div class="step"><div class="sn">1</div><div class="sh">Week 1: agree</div><div class="sd">A sponsor, success criteria and one cancel definition to certify, in a mutual plan.</div></div>
+        <div class="step"><div class="sn">2</div><div class="sh">Week 2: connect</div><div class="sd">Subscriptions, billing, support and viewing data in a sandbox under your governance.</div></div>
+        <div class="step"><div class="sn">3</div><div class="sh">Week 3: build</div><div class="sd">Forecast, churn model and the agent on your metrics and documents, hands-on.</div></div>
+        <div class="step"><div class="sn">4</div><div class="sh">Week 4: decide</div><div class="sd">Results against the criteria, and a go or no-go for the February game.</div></div>
+      </div>
+      <div style="margin-top:auto;display:grid;grid-template-columns:1fr 1fr 1fr;gap:28px;padding-top:20px;border-top:1px solid var(--db-line);">
+        <div><div style="font-size:18px;font-weight:700;color:var(--db-navy);">The proof of concept</div><div style="font-size:16px;line-height:1.45;color:var(--db-ink-soft);margin-top:4px;">Led by your Databricks account team and AI specialists, at no services cost.</div></div>
+        <div><div style="font-size:18px;font-weight:700;color:var(--db-navy);">Then, to production</div><div style="font-size:16px;line-height:1.45;color:var(--db-ink-soft);margin-top:4px;">Databricks Professional Services or a certified partner. Partner work can qualify for co-funding.</div></div>
+        <div><div style="font-size:18px;font-weight:700;color:var(--db-navy);">Over two years</div><div style="font-size:16px;line-height:1.45;color:var(--db-ink-soft);margin-top:4px;">Care staffing, always-on churn, personalization and ad insights reuse the same platform.</div></div>
+      </div>
+    </div>
+  </section>
+
+</deck-stage>
+<script src="deck-stage.js"></script>
+</body>
+</html>

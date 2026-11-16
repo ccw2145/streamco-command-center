@@ -1,0 +1,5 @@
+# Generator dependencies (installed by each data notebook's first cell: %pip install -q -r ../requirements.txt).
+# numpy, pandas, scipy, scikit-learn and pyarrow come from the serverless base environment.
+dbldatagen>=0.4
+faker>=30
+pyyaml>=6

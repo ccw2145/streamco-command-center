@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>StreamCo Command Center: architecture</title>
+<link rel="stylesheet" href="colors_and_type.css">
+<style>
+  html,body{margin:0;background:var(--db-oat-light);}
+  body{width:1600px;height:900px;font-family:var(--font-sans);color:var(--db-ink);box-sizing:border-box;padding:36px 44px;display:flex;flex-direction:column;}
+  .kick{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--db-lava);}
+  h1{margin:6px 0 18px;font-size:30px;font-weight:700;letter-spacing:-.01em;color:var(--db-navy);}
+  .flow{display:grid;grid-template-columns:1fr 18px 1.25fr 18px 1.15fr 18px 1.3fr 18px 1fr;flex:1;min-height:0;}
+  .col{display:flex;flex-direction:column;gap:8px;min-height:0;}
+  .head{display:flex;align-items:center;gap:8px;margin-bottom:2px;}
+  .n{width:24px;height:24px;border-radius:50%;color:#fff;font-family:var(--font-mono);font-size:13px;display:flex;align-items:center;justify-content:center;background:var(--db-navy);flex:none;}
+  .n.l2{background:var(--db-lava);} .n.l3{background:var(--db-navy-700);} .n.l4{background:var(--db-green);} .n.src{background:#8A9AA0;}
+  .ht{font-size:16px;font-weight:700;color:var(--db-navy);}
+  .box{background:#fff;border:1px solid var(--db-line);border-radius:8px;padding:8px 11px;box-shadow:0 1px 2px rgba(27,49,57,.06);}
+  .box.feat{border-left:4px solid var(--db-coral);}
+  .t{font-size:14px;font-weight:700;color:var(--db-navy);line-height:1.25;}
+  .d{font-size:12px;line-height:1.35;color:var(--db-ink-soft);margin-top:2px;}
+  .m{font-family:var(--font-mono);font-size:11px;color:#5C6B70;}
+  .src .box{background:#F3F2EF;border-style:dashed;}
+  .note{font-size:12px;color:var(--db-ink-muted);font-style:italic;margin-top:auto;}
+  .arrow{display:flex;align-items:center;justify-content:center;color:var(--db-coral);font-size:20px;font-weight:700;}
+  .band{margin-top:14px;background:var(--db-navy);border-radius:10px;padding:12px 16px;display:grid;grid-template-columns:auto 1fr 1fr 1fr 1fr;gap:16px;align-items:start;color:#F4F1ED;}
+  .band .bh{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--db-coral);padding-top:2px;}
+  .band .bt{font-size:14px;font-weight:700;color:#fff;}
+  .band .bd{font-size:12px;color:#B9C6CB;line-height:1.35;margin-top:2px;}
+  .legend{display:flex;gap:18px;margin-top:8px;font-size:12px;color:var(--db-ink-muted);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .sw{width:14px;height:10px;border-radius:2px;display:inline-block;}
+</style>
+</head>
+<body>
+  <div class="kick">StreamCo Command Center &middot; architecture</div>
+  <h1>Four layers on one governed platform, with every Databricks feature the demo uses</h1>
+
+  <div class="flow">
+    <div class="col src">
+      <div class="head"><div class="n src">S</div><div class="ht">Source systems</div></div>
+      <div class="box"><div class="t">MySQL</div><div class="d">Subscriptions and accounts</div></div>
+      <div class="box"><div class="t">PostgreSQL</div><div class="d">Billing and payment retries</div></div>
+      <div class="box"><div class="t">Salesforce Service Cloud</div><div class="d">Support cases and transcripts</div></div>
+      <div class="box"><div class="t">Payment processor API</div><div class="d">Decline and failure events</div></div>
+      <div class="box"><div class="t">Event stream</div><div class="d">Playback and CDN telemetry</div></div>
+      <div class="box"><div class="t">Policy documents</div><div class="d">Save-offer, payment retry, kids profile, CDN runbook</div></div>
+      <div class="note">Simulated in the demo. In production: Lakeflow Connect (CDC and SaaS connectors) and Zerobus Ingest.</div>
+    </div>
+    <div class="arrow">&rarr;</div>
+
+    <div class="col">
+      <div class="head"><div class="n">1</div><div class="ht">Governed data foundation</div></div>
+      <div class="box feat"><div class="t">Unity Catalog Volume</div><div class="d">Raw files land, tagged by source system</div><div class="m">raw_landing</div></div>
+      <div class="box feat"><div class="t">Lakeflow Declarative Pipelines</div><div class="d">Bronze, silver, gold; 6 quality rules (expectations)</div><div class="m">streamco-data-stream, streamco-data-batch</div></div>
+      <div class="box feat"><div class="t">Governed views</div><div class="d">One subscriber ID across all five systems; personal data masked, kids excluded</div><div class="m">v_subscribers, v_support_showcase</div></div>
+      <div class="box feat"><div class="t">Metric View</div><div class="d">One definition of cancels, cancel rate, active subs</div><div class="m">mv_streamco_metrics</div></div>
+      <div class="box feat"><div class="t">Databricks SQL (serverless warehouse)</div><div class="d">Every screen, Genie and the agent query here</div></div>
+    </div>
+    <div class="arrow">&rarr;</div>
+
+    <div class="col">
+      <div class="head"><div class="n l2">2</div><div class="ht">Predictive ML</div></div>
+      <div class="box feat"><div class="t">MLflow experiments</div><div class="d">LightGBM forecast and churn models, tracked runs</div></div>
+      <div class="box feat"><div class="t">Unity Catalog model registry</div><div class="d">Champion and challenger aliases</div><div class="m">viewer_forecast, churn_propensity</div></div>
+      <div class="box feat"><div class="t">Batch scoring</div><div class="d">Capacity flags; churn scores and the save plan</div><div class="m">forecast_flags, churn_scores, save_plan</div></div>
+      <div class="box feat"><div class="t">Drift and accuracy monitoring</div><div class="d">PSI per feature, AUC by month, holdout save rates</div><div class="m">churn_monitoring</div></div>
+      <div class="box feat"><div class="t">Lakeflow Jobs</div><div class="d">End-to-end job, plus a weekly retrain with a champion/challenger check</div></div>
+    </div>
+    <div class="arrow">&rarr;</div>
+
+    <div class="col">
+      <div class="head"><div class="n l3">3</div><div class="ht">GenAI</div></div>
+      <div class="box feat"><div class="t">Genie Agent</div><div class="d">Numbers and follow-ups from the Metric View</div><div class="m">StreamCo Subscriber Insights</div></div>
+      <div class="box feat"><div class="t">Agent Bricks on Agent Runtime</div><div class="d">The Ask agent, with three tools: Genie, a UC function and AI Search</div><div class="m">agent-bricks-streamco-ask</div></div>
+      <div class="box feat"><div class="t">Unity Catalog functions</div><div class="d">Cancel-driver breakdown; PII redaction</div><div class="m">fn_cancel_drivers, fn_redact_pii</div></div>
+      <div class="box feat"><div class="t">AI Search</div><div class="d">Policies and masked transcripts, embedded with gte-large-en</div><div class="m">knowledge_idx</div></div>
+      <div class="box feat"><div class="t">AI Functions (ai_query)</div><div class="d">A personal message for every at-risk subscriber, in one batch</div><div class="m">personalized_messages</div></div>
+      <div class="box feat"><div class="t">MLflow Tracing</div><div class="d">Every agent step and tool call recorded</div></div>
+    </div>
+    <div class="arrow">&rarr;</div>
+
+    <div class="col">
+      <div class="head"><div class="n l4">4</div><div class="ht">Command Center</div></div>
+      <div class="box feat"><div class="t">Databricks Apps</div><div class="d">FastAPI and React, four screens</div></div>
+      <div class="box feat"><div class="t">Lakebase</div><div class="d">Synced churn scores and messages, one subscriber in about 3 ms; approvals written back</div><div class="m">churn_scores_serving, streamco_app.approvals</div></div>
+      <div class="box"><div class="t">1 One Truth</div><div class="d">What happened?</div></div>
+      <div class="box"><div class="t">2 Forecast</div><div class="d">Could we have seen it coming?</div></div>
+      <div class="box"><div class="t">3 Ask</div><div class="d">Why did they cancel?</div></div>
+      <div class="box"><div class="t">4 Save Subscribers</div><div class="d">Who's next, and what do we do? A person approves.</div><div class="m">approvals</div></div>
+    </div>
+  </div>
+
+  <div class="band">
+    <div class="bh">Governed<br>throughout</div>
+    <div><div class="bt">Unity Catalog</div><div class="bd">Access control, governed views, lineage from system tables, one catalog for data, models, functions and the index</div></div>
+    <div><div class="bt">Unity Gateway</div><div class="bd">Every model call (system.ai models), with usage logs, rate limits and budgets per team</div></div>
+    <div><div class="bt">Serverless compute</div><div class="bd">Pipelines, jobs, SQL, model training and the apps; nothing to size or manage</div></div>
+    <div><div class="bt">Databricks Asset Bundles</div><div class="bd">The pipelines, jobs and app defined as code in one bundle</div></div>
+  </div>
+  <div class="legend"><span><i class="sw" style="background:var(--db-coral)"></i>Databricks feature</span><span><i class="sw" style="background:#F3F2EF;border:1px dashed #9AA"></i>Simulated source</span><span>Synthetic demo data</span></div>
+</body>
+</html>

@@ -1,0 +1,23 @@
+# The StreamCo Command Center Databricks App. Source: app/ (backend serves the built frontend from
+# app/frontend/dist, so run `cd app/frontend && npm run build` before `databricks bundle deploy`).
+# Env (catalog, schema, Genie Agent id, agent name, gateway model) is in app/app.yaml.
+# Deploying gives the app's service principal CAN_USE on the warehouse and a Lakebase role that can create its own
+# schema (streamco_app). Reading the synced tables needs a Postgres GRANT on schema streamco; see docs/grants-pending.md.
+resources:
+  apps:
+    streamco_command_center:
+      name: streamco-command-center
+      description: "StreamCo Command Center: One Truth, Forecast, Ask, Save Subscribers"
+      source_code_path: ../app
+      resources:
+        - name: sql-warehouse
+          description: SQL warehouse for the Ask lanes, Approve and the usage tile
+          sql_warehouse:
+            id: ${var.warehouse_id}
+            permission: CAN_USE
+        - name: postgres
+          description: Lakebase database for the synced per-subscriber tables and the app's approvals
+          postgres:
+            branch: projects/streamco/branches/production
+            database: projects/streamco/branches/production/databases/databricks-postgres
+            permission: CAN_CONNECT_AND_CREATE

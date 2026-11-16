@@ -1,0 +1,9 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+.agentbricks/*
+!.agentbricks/project.toml
+app.agentbricksdev.yaml
+mlflow.db
+uv.lock

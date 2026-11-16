@@ -1,0 +1,137 @@
+# Owner: Stream A (Data + Pipelines). One entry per clickable number (metric_id must match the fixture's
+# provenance map). Loaded into ref_metric_provenance by notebooks/01_setup_uc.py, which fills the value
+# tokens {day_after} (game_date + 1) and {alert_id} (planted.INCIDENT). Table names are unqualified:
+# the app runs them with the demo catalog/schema as the session default.
+metrics:
+  - metric_id: peak_viewers
+    display_name: "Peak concurrent viewers"
+    owner_system: "Session Backbone"
+    source_tables: [gold_cdn_region_minute]
+    sql_text: >-
+      SELECT max(concurrent_sessions) AS peak_viewers FROM (SELECT minute_ts, sum(concurrent_sessions) AS concurrent_sessions FROM gold_cdn_region_minute GROUP BY minute_ts)
+  - metric_id: forecast_peak
+    display_name: "Forecast peak (p50)"
+    owner_system: "Demand forecast"
+    source_tables: [gold_demand_forecast]
+    sql_text: >-
+      SELECT max(p50_total) AS forecast_peak FROM (SELECT forecast_ts, sum(p50) AS p50_total FROM gold_demand_forecast GROUP BY forecast_ts)
+  - metric_id: incidents_caught
+    display_name: "Incidents caught"
+    owner_system: "Anomaly Engine"
+    source_tables: [gold_anomaly_alerts]
+    sql_text: >-
+      SELECT count(*) AS incidents, max(persistence_min) AS persistence_min FROM gold_anomaly_alerts WHERE severity = 'high'
+  - metric_id: affected_sessions
+    display_name: "Sessions affected"
+    owner_system: "Anomaly Engine"
+    source_tables: [gold_anomaly_alerts]
+    sql_text: >-
+      SELECT affected_sessions FROM gold_anomaly_alerts WHERE alert_id = '{alert_id}'
+  - metric_id: hot_cell_utilization
+    display_name: "Forecast utilization, CDN-C Dallas"
+    owner_system: "Demand forecast"
+    source_tables: [gold_demand_forecast, ref_cdn_capacity]
+    sql_text: >-
+      SELECT cdn, metro, max(utilization_p50) AS utilization FROM gold_demand_forecast WHERE metro = 'DFW' GROUP BY cdn, metro ORDER BY utilization DESC
+  - metric_id: cancels_actual
+    display_name: "Sports cancellations, day after"
+    owner_system: "Subscriber Live"
+    source_tables: [gold_cancellations_daily]
+    sql_text: >-
+      SELECT sum(cancels) AS cancels FROM gold_cancellations_daily WHERE day = DATE'{day_after}' AND tier = 'Sports'
+  - metric_id: cancels_expected
+    display_name: "Expected Sports cancellations"
+    owner_system: "Subscriber Live"
+    source_tables: [gold_cancel_expected, fact_daily_cancels]
+    sql_text: >-
+      SELECT round(yhat) AS expected, round(lo) AS lo, round(hi) AS hi FROM gold_cancel_expected WHERE day = DATE'{day_after}' AND tier = 'Sports'
+  - metric_id: cancels_pct_over
+    display_name: "Cancellations vs expected"
+    owner_system: "Subscriber Live"
+    source_tables: [gold_cancel_expected]
+    sql_text: >-
+      SELECT actual / yhat - 1 AS pct_over FROM gold_cancel_expected WHERE day = DATE'{day_after}' AND tier = 'Sports'
+  - metric_id: subs_at_risk
+    display_name: "Subscribers at high risk"
+    owner_system: "Churn model"
+    source_tables: [gold_churn_scores]
+    sql_text: >-
+      SELECT count(*) AS at_risk, round(sum(churn_prob)) AS projected_cancels_30d FROM gold_churn_scores WHERE is_high_risk
+  - metric_id: revenue_at_risk
+    display_name: "Revenue at risk if no action (projected cancels, 12 months, gross)"
+    owner_system: "Churn model"
+    source_tables: [gold_churn_scores, ref_assumptions]
+    sql_text: >-
+      SELECT round(sum(churn_prob)) * a.arpu * a.months AS revenue_at_risk FROM gold_churn_scores, (SELECT max(CASE WHEN key='arpu_monthly' THEN value END) AS arpu, max(CASE WHEN key='retention_months' THEN value END) AS months FROM ref_assumptions) a WHERE is_high_risk GROUP BY a.arpu, a.months
+  - metric_id: subs_saved_retro
+    display_name: "Already-cancelled subscribers won back"
+    owner_system: "Save plan"
+    source_tables: [gold_save_plan, gold_uplift_estimates]
+    sql_text: >-
+      SELECT saved_point FROM gold_save_plan WHERE card_id = 'retro_total'
+  - metric_id: plan_saved_total
+    display_name: "Subscribers kept by the plan"
+    owner_system: "Save plan"
+    source_tables: [gold_save_plan, gold_uplift_estimates]
+    sql_text: >-
+      SELECT sum(saved_point) AS saved, sum(saved_lo) AS lo, sum(saved_hi) AS hi FROM gold_save_plan WHERE card_id IN ('payment','playback','onboarding')
+  - metric_id: plan_revenue_protected
+    display_name: "Revenue protected (12 months)"
+    owner_system: "Save plan"
+    source_tables: [gold_save_plan, ref_assumptions]
+    sql_text: >-
+      SELECT sum(revenue_protected_usd) AS revenue_protected FROM gold_save_plan WHERE card_id IN ('payment','playback','onboarding')
+  - metric_id: recon_sports
+    display_name: "Subscriber Live vs Finance ledger"
+    owner_system: "Subscriber Live + Billing Ledger"
+    source_tables: [gold_reconciliation_daily]
+    sql_text: >-
+      SELECT subscriber_live_cancels, ledger_cancels, pct_diff, status FROM gold_reconciliation_daily WHERE day = DATE'{day_after}' AND tier = 'Sports'
+  - metric_id: cancel_driver_playback
+    display_name: "Cancel driver: Couldn't watch halftime properly"
+    owner_system: "Subscriber Live"
+    source_tables: [gold_cancel_decomposition]
+    sql_text: >-
+      SELECT driver, n_cancels, pct, evidence_type, confidence, rule FROM gold_cancel_decomposition WHERE day = DATE'{day_after}' AND tier = 'Sports' AND driver = 'playback'
+  - metric_id: cancel_driver_payment
+    display_name: "Cancel driver: Sign-up payment timed out, never retried"
+    owner_system: "Subscriber Live"
+    source_tables: [gold_cancel_decomposition]
+    sql_text: >-
+      SELECT driver, n_cancels, pct, evidence_type, confidence, rule FROM gold_cancel_decomposition WHERE day = DATE'{day_after}' AND tier = 'Sports' AND driver = 'payment'
+  - metric_id: cancel_driver_event_only
+    display_name: "Cancel driver: Expected event-only cancels"
+    owner_system: "Subscriber Live"
+    source_tables: [gold_cancel_decomposition]
+    sql_text: >-
+      SELECT driver, n_cancels, pct, evidence_type, confidence, rule FROM gold_cancel_decomposition WHERE day = DATE'{day_after}' AND tier = 'Sports' AND driver = 'event_only'
+  - metric_id: cancel_driver_unexplained
+    display_name: "Cancel driver: Unexplained"
+    owner_system: "Subscriber Live"
+    source_tables: [gold_cancel_decomposition]
+    sql_text: >-
+      SELECT driver, n_cancels, pct, evidence_type, confidence, rule FROM gold_cancel_decomposition WHERE day = DATE'{day_after}' AND tier = 'Sports' AND driver = 'unexplained'
+  - metric_id: cancels_governed
+    display_name: "Sports cancellations, governed definition"
+    owner_system: "Unity Catalog metric view"
+    source_tables: [gold_team_cancel_counts, gold_cancel_events]
+    sql_text: >-
+      SELECT DISTINCT governed_count, governed_definition FROM gold_team_cancel_counts
+  - metric_id: team_cancels_product
+    display_name: "Sports cancellations, as Product analytics counts them"
+    owner_system: "Subscriptions (MySQL)"
+    source_tables: [gold_team_cancel_counts, silver_subscription_events]
+    sql_text: >-
+      SELECT team, count, definition, governed_count FROM gold_team_cancel_counts WHERE team = 'Product analytics'
+  - metric_id: team_cancels_finance
+    display_name: "Sports cancellations, as Finance counts them"
+    owner_system: "Billing ledger"
+    source_tables: [gold_team_cancel_counts, billing_ledger_cancels_daily]
+    sql_text: >-
+      SELECT team, count, definition, governed_count FROM gold_team_cancel_counts WHERE team = 'Finance'
+  - metric_id: team_cancels_care
+    display_name: "Sports cancellations, as Customer care counts them"
+    owner_system: "Support cases (Salesforce)"
+    source_tables: [gold_team_cancel_counts, silver_support_cases]
+    sql_text: >-
+      SELECT team, count, definition, governed_count FROM gold_team_cancel_counts WHERE team = 'Customer care'

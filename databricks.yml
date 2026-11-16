@@ -1,0 +1,35 @@
+bundle:
+  name: streamco-command-center
+
+include:
+  - resources/*.yml
+
+sync:
+  include:
+    - app/frontend/dist/**
+
+variables:
+  catalog:
+    description: Unity Catalog catalog for everything this project writes
+    default: cindy_wu_catalog
+  schema:
+    description: Schema the data layer and the demo layer write (tables, views, models, functions)
+    default: streamco
+  src_schema:
+    description: Schema the demo views read from; the data layer generates it, so it equals schema
+    default: streamco
+  warehouse_id:
+    description: SQL warehouse for Genie, ai_query and the app
+    default: <warehouse-id>
+  gateway_model:
+    description: Unity Gateway model service, passed unquoted (no backticks)
+    default: system.ai.gpt-5-6-sol
+
+targets:
+  dev:
+    mode: development
+    default: true
+    presets:
+      name_prefix: ""
+    workspace:
+      profile: my-workspace

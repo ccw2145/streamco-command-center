@@ -1,0 +1,102 @@
+# One job, end to end on serverless: data generation -> pipelines -> anomaly + decomposition -> demo notebooks 01-09 (09 syncs the serving tables into Lakebase).
+# Job parameters are pushed to every notebook task as widgets.
+resources:
+  jobs:
+    streamco_pipeline:
+      name: streamco-pipeline
+      description: "StreamCo Command Center: generate data, run the two Lakeflow pipelines, then the demo layer (01 -> 06)."
+      max_concurrent_runs: 1
+      parameters:
+        - {name: catalog, default: "${var.catalog}"}
+        - {name: schema, default: "${var.schema}"}
+        - {name: src_schema, default: "${var.src_schema}"}
+        - {name: warehouse_id, default: "${var.warehouse_id}"}
+        - {name: gateway_model, default: "${var.gateway_model}"}
+        - {name: game_date, default: "2027-02-14"}
+      tasks:
+        # ---- Data generation (data/, copied from the generator project) ----
+        - task_key: gen_setup
+          notebook_task: {notebook_path: ../data/notebooks/01_setup_uc.py}
+        - task_key: gen_dimensions
+          depends_on: [{task_key: gen_setup}]
+          notebook_task: {notebook_path: ../data/notebooks/02_gen_dimensions.py}
+        - task_key: gen_history
+          depends_on: [{task_key: gen_dimensions}]
+          notebook_task: {notebook_path: ../data/notebooks/03_gen_history_facts.py}
+        - task_key: gen_game_night
+          depends_on: [{task_key: gen_history}]
+          notebook_task: {notebook_path: ../data/notebooks/04_gen_game_night.py}
+        - task_key: gen_transcripts
+          depends_on: [{task_key: gen_game_night}]
+          notebook_task: {notebook_path: ../data/notebooks/05_gen_transcripts.py}
+        - task_key: classify_transcripts
+          depends_on: [{task_key: gen_transcripts}]
+          notebook_task: {notebook_path: ../data/notebooks/07_classify_transcripts.py}
+
+        # ---- Lakeflow pipelines ----
+        - task_key: pipeline_stream
+          depends_on: [{task_key: gen_transcripts}]
+          pipeline_task: {pipeline_id: "${resources.pipelines.streamco_data_stream.id}", full_refresh: true}
+        - task_key: pipeline_batch
+          depends_on: [{task_key: pipeline_stream}, {task_key: classify_transcripts}]
+          pipeline_task: {pipeline_id: "${resources.pipelines.streamco_data_batch.id}", full_refresh: true}
+        - task_key: source_counts
+          depends_on: [{task_key: pipeline_batch}]
+          notebook_task:
+            notebook_path: ../data/notebooks/00_run_sql.py
+            base_parameters: {sql_file: ../sql/09_metric_views.sql}
+
+        # ---- Forecast, anomaly, decomposition ----
+        - task_key: forecast
+          depends_on: [{task_key: pipeline_stream}]
+          notebook_task: {notebook_path: ../notebooks/02_forecast.py}
+        - task_key: anomaly
+          depends_on: [{task_key: forecast}]
+          notebook_task: {notebook_path: ../data/notebooks/10_anomaly_engine_sim.py}
+        - task_key: decomposition
+          depends_on: [{task_key: pipeline_batch}, {task_key: anomaly}]
+          notebook_task:
+            notebook_path: ../data/notebooks/00_run_sql.py
+            base_parameters: {sql_file: ../sql/14_cancel_decomposition.sql}
+
+        # ---- Demo layer ----
+        - task_key: setup
+          depends_on: [{task_key: decomposition}, {task_key: source_counts}]
+          notebook_task: {notebook_path: ../notebooks/01_setup.py}
+        - task_key: churn
+          depends_on: [{task_key: setup}]
+          notebook_task: {notebook_path: ../notebooks/03_churn.py}
+        - task_key: monitor
+          depends_on: [{task_key: churn}]
+          notebook_task: {notebook_path: ../notebooks/08_monitor.py}
+        - task_key: genie
+          depends_on: [{task_key: churn}]
+          notebook_task: {notebook_path: ../notebooks/04_genie.py}
+        - task_key: personalize
+          depends_on: [{task_key: churn}]
+          notebook_task: {notebook_path: ../notebooks/05_personalize.py}
+        - task_key: lakebase
+          depends_on: [{task_key: personalize}]
+          notebook_task:
+            notebook_path: ../notebooks/09_lakebase.py
+            base_parameters: {app_sp: "${resources.apps.streamco_command_center.service_principal_client_id}"}
+        - task_key: ask_agent
+          depends_on: [{task_key: genie}]
+          notebook_task: {notebook_path: ../notebooks/06_ask_agent.py}
+
+    # Weekly retrain (paused): a new challenger, promoted only if it beats the champion; then re-check drift and accuracy.
+    streamco_churn_retrain:
+      name: streamco-churn-retrain
+      description: "Weekly: retrain churn_propensity (03_churn, champion/challenger gate), then re-check drift and accuracy (08_monitor)."
+      max_concurrent_runs: 1
+      schedule: {quartz_cron_expression: "0 0 6 ? * MON", timezone_id: "America/New_York", pause_status: PAUSED}
+      parameters:
+        - {name: catalog, default: "${var.catalog}"}
+        - {name: schema, default: "${var.schema}"}
+        - {name: src_schema, default: "${var.src_schema}"}
+      tasks:
+        - task_key: retrain
+          notebook_task: {notebook_path: ../notebooks/03_churn.py}
+        - task_key: monitor
+          depends_on: [{task_key: retrain}]
+          notebook_task: {notebook_path: ../notebooks/08_monitor.py}

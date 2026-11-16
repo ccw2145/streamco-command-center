@@ -1,0 +1,36 @@
+# Databricks App manifest for streamco-command-center (resources/app.yml).
+# DATABRICKS_APP_NAME, DATABRICKS_HOST and the service-principal credentials are injected by the Apps runtime.
+command:
+  - uvicorn
+  - backend.main:app
+  - --host
+  - "0.0.0.0"
+  - --port
+  - "8000"
+
+env:
+  - name: DATABRICKS_WAREHOUSE_ID
+    valueFrom: sql-warehouse          # the warehouse resource in resources/app.yml
+  - name: CATALOG_NAME
+    value: cindy_wu_catalog
+  - name: SCHEMA_NAME
+    value: streamco
+  - name: GAME_DATE
+    value: "2027-02-14"
+  - name: GATEWAY_MODEL
+    value: system.ai.gpt-5-6-sol      # Unity Gateway model service, unquoted
+  # Genie Agent "StreamCo Subscriber Insights": set to the id notebooks/04_genie.py prints.
+  - name: GENIE_AGENT_ID
+    value: "01f1dbf923701cb3b3ec3d2fcbee9e87"
+  # The Ask agent on Agent Runtime (agent/, deployment_name streamco-ask).
+  - name: AGENT_NAME
+    value: agent-bricks-streamco-ask
+  # Optional: link the drawer's "Open in MLflow" button to the recorded Ask trace.
+  - name: MLFLOW_TRACE_URL
+    value: ""
+  # Lakebase project streamco: synced tables in schema streamco, the app's own tables in streamco_app.
+  - name: LAKEBASE_ENDPOINT
+    value: projects/streamco/branches/production/endpoints/primary
+  # 1 = never call live; everything comes from app/fixture.json.
+  - name: FORCE_FIXTURE
+    value: "0"

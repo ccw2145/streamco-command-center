@@ -1,0 +1,131 @@
+# Owner: Stream A (Data + Pipelines). Phrase bank for template-generated support transcripts
+# (notebooks/05_gen_transcripts.py, design deviation 5). Also read by notebooks/07 (Stream C) for the
+# reason-code enum and the rules classifier.
+#
+# Shape: reasons: {reason_code: {label: str, baseline_share: float, variants: [customer phrasing, ...]}}
+# baseline_share = share of ordinary-day contacts (sums to 1.0 over the baseline reasons). Reasons with
+# baseline_share 0 only appear in the planted overnight excess after the Big Game.
+reasons:
+  stream_froze_halftime:
+    label: Stream froze during the halftime show
+    baseline_share: 0.0
+    variants:
+      - "The stream kept freezing right when the halftime show started and I missed most of it."
+      - "My Roku spun and buffered the whole halftime show, it was unwatchable."
+      - "Halftime was a disaster, the picture froze every few seconds on my TV."
+      - "I paid for the game and the stream locked up during halftime, I want to know why."
+      - "Every time I restarted the app at halftime it froze again after a minute."
+      - "We had people over for the halftime show and it just kept buffering and freezing."
+      - "The video stalled over and over during the halftime performance."
+      - "Right at halftime the stream froze and showed the loading circle for minutes."
+      - "Halftime show would not play, it froze and kicked me out of the stream twice."
+      - "The big game stream froze at halftime and never recovered properly."
+  charged_declined_cancelled:
+    label: Charged or card declined, then account cancelled
+    baseline_share: 0.0
+    variants:
+      - "I signed up during the game, my card was declined, and now my account says cancelled."
+      - "You told me the payment timed out and then cancelled my new subscription without trying again."
+      - "My card works fine but the sign-up payment failed and the account got shut off this evening."
+      - "I subscribed last night at halftime and today it says my subscription was cancelled for non-payment."
+      - "The payment never went through even though my bank says nothing was declined, now I am cancelled."
+      - "Why was my brand new account cancelled? The charge showed as pending and then disappeared."
+      - "Signed up for the game, got a payment error, and now I am locked out."
+      - "Your system declined my card at sign-up and did not retry, so the account was closed."
+      - "I got an email that my payment failed and my subscription ended, I never got a chance to fix it."
+  cancel_request_other:
+    label: Cancellation request, other reason
+    baseline_share: 0.10
+    variants:
+      - "I would like to cancel my subscription please."
+      - "Please cancel my account, I do not need it anymore."
+      - "How do I cancel? I only wanted it for one event."
+      - "Cancel my plan at the end of this billing period."
+      - "I want to end my subscription today."
+      - "Can you stop my membership, I am not using it."
+      - "Please close my account and stop future charges."
+      - "I am switching to a different service so please cancel me."
+  login_issue:
+    label: Cannot sign in
+    baseline_share: 0.18
+    variants:
+      - "I cannot log in, it keeps saying my password is wrong."
+      - "The app signs me out every time I open it."
+      - "I never received the verification code to sign in."
+      - "My account is locked after too many login attempts."
+      - "I reset my password but still cannot get into my profile."
+      - "It says my email is not registered but I have an account."
+      - "Two-step sign in is not sending me the text message."
+      - "I am stuck on the sign in screen on my smart TV."
+  billing_question:
+    label: Question about a bill
+    baseline_share: 0.17
+    variants:
+      - "Why was I charged twice this month?"
+      - "Can you explain the amount on my latest invoice?"
+      - "I want to update the card on file for my monthly payment."
+      - "When does my next billing date fall?"
+      - "I see a charge I do not recognize on my statement."
+      - "Did my price go up? The bill is higher than last month."
+      - "How do I get a receipt for my last payment?"
+      - "Can I switch from monthly to annual billing?"
+  content_question:
+    label: Question about shows or games
+    baseline_share: 0.14
+    variants:
+      - "Is the replay of last week's game available to watch?"
+      - "When does the new season of my show come out?"
+      - "Why can I not find the documentary that was on the home page?"
+      - "Which channels are included in my plan?"
+      - "Is the pregame show part of my subscription?"
+      - "Where can I find the highlights from the playoffs?"
+      - "Can I download episodes to watch offline?"
+      - "Some titles disappeared from my watchlist, where did they go?"
+  device_setup:
+    label: Setting up a device
+    baseline_share: 0.12
+    variants:
+      - "How do I add the app to my new smart TV?"
+      - "I need help activating my Fire TV stick with the code on screen."
+      - "The app will not install on my tablet."
+      - "How many devices can I stream on at the same time?"
+      - "I want to connect my phone to cast to the television."
+      - "The activation page says the code expired before I could enter it."
+      - "Can I use the app on my game console?"
+      - "My new streaming box does not show the app in the store."
+  account_update:
+    label: Updating account details
+    baseline_share: 0.11
+    variants:
+      - "I need to change the email address on my account."
+      - "Please update my mailing address for the account."
+      - "How do I add a profile for my partner?"
+      - "I want to remove an old profile from the account."
+      - "Can you change the name on the account to mine?"
+      - "How do I turn on parental controls for my kids?"
+      - "I want to update my phone number for account alerts."
+      - "Please merge my two accounts into one."
+  playback_general:
+    label: General playback problem
+    baseline_share: 0.12
+    variants:
+      - "Videos sometimes play without sound on my laptop."
+      - "The picture quality looks blurry on movies tonight."
+      - "Subtitles are out of sync with the audio."
+      - "The app crashes when I try to open a movie."
+      - "Shows stop playing after a few minutes on my phone."
+      - "I get an error code when I press play on some episodes."
+      - "The audio is very quiet compared to other apps."
+      - "Playback skips back to the start of the episode."
+  promo_question:
+    label: Question about an offer or promotion
+    baseline_share: 0.06
+    variants:
+      - "Does the student discount apply to my plan?"
+      - "I had a promo code but it did not work at checkout."
+      - "Is there a free trial for new members?"
+      - "Can I still get the bundle deal I saw advertised?"
+      - "My promotional price ended early, can you check?"
+      - "How do I redeem the gift card I received?"
+      - "Is there a discount if I add another service?"
+      - "The offer email said I would get a month free, where is it?"

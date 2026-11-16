@@ -1,0 +1,14 @@
+# StreamCo Ask agent, managed by the Agent Bricks CLI and deployed to Agent Runtime.
+# Entrypoint streamco_ask.server:app (app.yaml runs `uv run start-server`). Logic: streamco_ask/core.py.
+# Tools: the Genie Agent "StreamCo Subscriber Insights" (GENIE_AGENT_ID), the UC function fn_cancel_drivers
+# (SQL warehouse) and AI Search over the index cindy_wu_catalog.streamco.knowledge_idx (KNOWLEDGE_INDEX, default
+# <catalog>.<schema>.knowledge_idx), all called as the app's service principal. They are deliberately not
+# declared as [[tools]] bindings and [tracing] is not bound: `agentbricks deploy` would reconcile grants for
+# them, and grants need human approval (docs/grants-pending.md). No memory or session store.
+# App names cap at 30 characters, so the deploy name is streamco-ask (app agent-bricks-streamco-ask).
+schema_version = 1
+
+[agent]
+framework = "openai"
+server = "agentbricks"
+deployment_name = "streamco-ask"

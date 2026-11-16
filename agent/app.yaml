@@ -1,0 +1,31 @@
+command:
+- uv
+- run
+- start-server
+env:
+- name: CATALOG_NAME
+  value: cindy_wu_catalog
+- name: SCHEMA_NAME
+  value: streamco
+- name: WAREHOUSE_ID
+  value: <warehouse-id>
+- name: GATEWAY_MODEL
+  value: system.ai.gpt-5-6-sol
+- name: GAME_DATE
+  value: '2027-02-14'
+- name: GENIE_AGENT_ID
+  value: 01f1dbf923701cb3b3ec3d2fcbee9e87
+- name: PIP_INDEX_URL
+  value: https://pypi.org/simple/
+- name: UV_INDEX_URL
+  value: https://pypi.org/simple/
+- name: UV_DEFAULT_INDEX
+  value: https://pypi.org/simple/
+- name: DATABRICKS_AGENTBRICKS_RUNTIME_STORE_LAKEBASE_BRANCH
+  value: projects/databricks-internal-custom-agents/branches/production
+- name: DATABRICKS_AGENTBRICKS_RUNTIME_STORE_DATABASE
+  value: agent-bricks-streamco-ask
+- name: DATABRICKS_AGENTBRICKS_RUNTIME_STORE_USERNAME
+  value: <agent-service-principal-id>
+- name: DATABRICKS_AGENTBRICKS_RUNTIME_STORE_SCHEMA
+  value: databricks_agentkit_runtime

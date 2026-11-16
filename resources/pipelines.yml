@@ -1,0 +1,26 @@
+# Lakeflow Declarative Pipelines (serverless) over the generated data. Code copied from the generator project.
+resources:
+  pipelines:
+    streamco_data_stream:
+      name: streamco-data-stream
+      serverless: true
+      catalog: ${var.catalog}
+      schema: ${var.schema}
+      continuous: false
+      channel: CURRENT
+      libraries:
+        - glob:
+            include: ../data/pipelines/stream/**
+      configuration:
+        landing_path: /Volumes/${var.catalog}/${var.schema}/raw_landing
+
+    streamco_data_batch:
+      name: streamco-data-batch
+      serverless: true
+      catalog: ${var.catalog}
+      schema: ${var.schema}
+      continuous: false
+      channel: CURRENT
+      libraries:
+        - glob:
+            include: ../data/pipelines/batch/**
